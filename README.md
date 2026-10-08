@@ -1,297 +1,173 @@
-# 屏幕截图翻译覆盖工具（ScreenTranslator）
+# ScreenTranslator
 
-> A lightweight Windows desktop translator: capture any region, recognize text with Windows OCR or optional PaddleOCR, translate it, and place the result back over the original content.
+> Real-time, on-screen translation for anything you **can't copy**. Capture a region, recognize the text with Windows OCR or optional PaddleOCR, translate it, and overlay the result right where the original words were — live, with a draggable region and fade-in highlights for changes.
 
-> **v0.3.0-beta:** adds real-time region monitoring — drag to move/resize the watched area while monitoring, and newly appeared or changed text fades in with a highlight so changes are obvious at a glance. Built on top of the v0.2.5-beta overlay fixes (OCR text-block coverage, paragraph translation, natural font sizing, color matching, overlay layout, translation latency, failure handling). Windows OCR remains the lightweight default.
+[![Stars](https://img.shields.io/github/stars/xuange-hu/screen-translator?style=social)](https://github.com/xuange-hu/screen-translator/stargazers)
+[![License](https://img.shields.io/badge/license-MIT-green)](LICENSE)
+[![Platform](https://img.shields.io/badge/platform-Windows-blue)](https://www.microsoft.com/windows)
+[![Python](https://img.shields.io/badge/python-3.11%2B-3776AB)](https://www.python.org)
+[![Release](https://img.shields.io/badge/release-v0.3.0--beta-orange)](https://github.com/xuange-hu/screen-translator/releases)
+
+**中文**：Windows 桌面截图翻译工具。截图（全屏 / 当前窗口 / 框选）→ Windows OCR 或可选 PaddleOCR 识别 → 自动翻译 → 用透明置顶覆盖层把译文盖在原文位置。新增**实时监控**：区域模式下开监控后可鼠标拖拽调整区域，新出现/变化的文字淡入高亮，变化一眼可见。
+
+![demo](assets/demo.svg)
+
+---
 
 ## Why ScreenTranslator
 
-ScreenTranslator is built for text that cannot be copied: games, comics, videos, images, legacy software, and web content. It keeps the workflow short: **capture → recognize → translate → overlay**.
+Some text simply cannot be selected: games, comics, videos, images, legacy desktop software, and web content behind canvas/DOM tricks. ScreenTranslator keeps the workflow short and stays out of your way:
 
-### Share this project
+**capture → recognize → translate → overlay**
 
-> ScreenTranslator is an open-source Windows screen translation tool with region, full-screen and active-window capture; Windows OCR plus optional PaddleOCR; multiple translation providers; editable overlay results; global hotkeys; and DPI-aware multi-monitor support. Contributions and real-world feedback are welcome.
+- **Live region monitoring (NEW in v0.3).** Start monitoring a region, then drag to move or resize the watched area anytime. It only re-captures when the text actually changes, and newly appeared / changed lines **fade in with a highlight ring** — so you notice changes at a glance without re-reading everything.
+- **Lightweight by default.** Uses the built-in Windows OCR engine — no models, no Paddle, no OpenCV downloaded on first run. Optional high-accuracy PaddleOCR is a one-click, checksum-verified component.
+- **Private by default.** No screenshots or history saved unless you opt in; API keys are read from environment variables and never logged.
+- **Pixel-accurate on any monitor setup.** Per-Monitor V2 DPI aware, multi-monitor (including negative coordinates), correct mapping across mixed scaling.
 
-## Open-source
+## Features
 
-- License: [MIT](LICENSE)
-- Contribution guide: [CONTRIBUTING.md](CONTRIBUTING.md)
-- Please never commit API keys, local configuration files, screenshots, or model caches.
+- Three capture modes: full screen, current window, and mouse drag-region. The current-window mode prefers native Win32 `PrintWindow` and only falls back to a validated visible-area capture.
+- Region selection supports negative multi-monitor coordinates, exact open-interval coordinates, `Esc` to cancel, and a cross-scaling safety check.
+- Default OCR is `Windows.Media.Ocr` (no bundled models). High-accuracy **PaddleOCR** is an optional component downloaded with a live progress bar, verified via HTTPS manifest, protocol version, file size, SHA-256, and Authenticode before atomic install.
+- OCR emits unified text / rect / confidence / orientation / text-line output, with confidence filtering and adjacent-block merging.
+- Unified `Translator` interface: built-in `Mock` (offline-testable), **Google free** (no key, concurrent block translation), MyMemory, OpenAI-compatible, DeepL, and Google Cloud Translation v2. Batch translation, exponential-backoff retry, timeout, request rate-limiting, and a JSON result cache.
+- Protects numbers / URLs / emails / placeholders / variables before translation so they aren't mangled.
+- Transparent always-on-top overlay: click-through, auto-wrap, auto font-shrink, light/dark text chosen by background brightness, semi-transparent background, global hide/show.
+- Edit mode: drag individual translated blocks; `Esc` exits and closes the overlay.
+- Global hotkeys via `pynput`, editable in settings with conflict detection.
+- System tray with capture / full-screen / window / hide / edit / refresh / settings / quit.
+- Correct Per-Monitor V2 DPI and multi-monitor (negative coordinates) coordinate consistency.
+- Unified motion language: capture tick, themed selection shrink, progress dots, segmented reveal; supports reduced / eco motion strategies.
+- OCR / translation / image processing all run on background `QThread`s — UI never blocks; re-entrancy is guarded with a config snapshot.
+- Config in JSON; API keys prefer environment variables; logs are auto-redacted; screenshots and history are not saved by default.
+- In-app update check and a one-click sanitized diagnostics ZIP (config, environment, recent logs — never screenshots, history, models, or keys).
 
-Windows 10/11 桌面工具：按快捷键截图（全屏 / 当前窗口 / 框选）→ Windows OCR 或可选 PaddleOCR 识别 → 自动翻译 → 用透明置顶覆盖层把译文盖在原文位置。适用于游戏、漫画、网页、图片、视频字幕等无法直接复制文字的场景。
+## Quick start (from source)
 
-## 功能
-
-- 三种截图方式：全屏、当前窗口、鼠标框选；当前窗口优先使用 Win32 `PrintWindow` 原生捕获，失败才安全回退到经过校验的可见区域，绝不退化成整桌面截图
-- 框选支持负坐标多显示器、右下开区间精确坐标、Esc 取消与跨缩放安全检查
-- 轻量版默认使用 Windows.Media.Ocr，不内置 Paddle、PaddleX、OpenCV 与模型
-- 可在“设置 → OCR”按需下载 PaddleOCR 独立组件；显示实时进度，校验 HTTPS manifest、协议版本、文件大小、SHA-256 与 Authenticode 后原子安装
-- OCR 统一输出文本、矩形、置信度、方向和文本行，支持置信度过滤与相邻文本块合并
-- 统一 Translator 接口：内置 Mock（离线可测）、Google 免费（无 Key、并发快译）、MyMemory、OpenAI 兼容接口、DeepL、Google Cloud Translation v2
-- 批量翻译、失败重试（指数退避）、超时、请求限速、JSON 结果缓存
-- 翻译前保护数字 / URL / 邮箱 / 占位符 / 变量，避免被翻译破坏
-- 透明置顶覆盖层：鼠标穿透、自动换行、自动缩字号、按背景亮度选择深浅文字、半透明底、可整体隐藏 / 显示
-- 编辑模式：进入后可拖动单个译文框，Esc 退出并关闭覆盖层
-- 全局快捷键（pynput），可在设置中修改并检测冲突
-- 系统托盘（框选 / 全屏 / 窗口 / 隐藏显示 / 编辑模式 / 刷新 / 设置 / 退出）
-- 正确感知 Per-Monitor V2 DPI，多显示器（含负坐标）坐标一致
-- 统一动效节奏：捕获卡短线确认、主题色选框收束、进度波点与译文分段揭示；支持 reduced / eco 动效策略
-- OCR / 翻译 / 图像处理全部在后台 QThread，不卡 UI；处理期间阻止重入并使用配置快照
-- 配置存 JSON；API Key 优先读环境变量，日志自动脱敏；默认不保存截图与历史
-- 设置内可检查并下载更新；安装前必须通过发布方 SHA-256 与 Authenticode，正式版还会核对当前程序的签名主体
-- 一键导出诊断 ZIP，严格只包含脱敏配置、运行环境和最近日志，不包含截图、翻译历史、模型或 API Key
-
-## 项目结构
-
-```text
-screen_translator/
-├── main.py                        # 入口：DPI 感知 + QApplication + 控制器
-├── requirements-core.txt          # 轻量运行依赖（Windows OCR）
-├── requirements-paddle.txt        # 本地完整 Paddle 开发依赖
-├── requirements-dev.txt           # 测试与打包依赖
-├── config.example.json
-├── build-lite.spec                # 轻量版 PyInstaller 配置
-├── build.spec                     # 传统完整 PyInstaller 配置
-├── paddle_component.spec          # 独立 PaddleOCR worker 配置
-├── installer/                     # Inno Setup 轻量安装器
-├── scripts/                       # 轻量构建、组件构建与签名脚本
-├── app/
-│   ├── application.py             # 顶层控制器（串联所有模块）
-│   ├── config.py                  # JSON 配置（默认值合并、原子保存、脱敏）
-│   ├── logger.py                  # 日志 + API Key 脱敏
-│   ├── models.py                  # TextRegion / CaptureInfo 数据模型
-│   ├── hotkeys.py                 # pynput 全局快捷键 + 冲突检测
-│   └── version.py                 # 应用版本与发行仓库
-├── ui/
-│   ├── main_window.py             # 主界面
-│   ├── settings_dialog.py         # 设置页面（6 个页签）
-│   ├── selection_overlay.py       # 框选遮罩
-│   ├── translation_overlay.py     # 透明覆盖窗口
-│   ├── overlay_manager.py         # 按显示器分发覆盖窗口，DPI 坐标换算
-│   └── tray_icon.py               # 系统托盘
-├── services/
-│   ├── screenshot_service.py      # mss 截图（物理像素）
-│   ├── diagnostics.py             # 脱敏诊断包导出
-│   ├── update_service.py          # GitHub Release 检查与校验下载
-│   ├── window_capture_service.py  # Win32 前台窗口矩形
-│   ├── ocr/
-│   │   ├── base.py                # OCREngine 抽象接口 + 工厂
-│   │   ├── paddle_ocr.py          # 本地或独立组件 PaddleOCR 适配
-│   │   ├── component_manager.py   # 可选组件下载、校验与原子激活
-│   │   ├── windows_ocr.py         # Windows.Media.Ocr 默认后端
-│   │   └── null_ocr.py            # 引擎不可用时的空实现
-│   └── translation/
-│       ├── base.py                # Translator 抽象 + 缓存/重试/限速
-│       ├── cache.py               # JSON 翻译缓存
-│       ├── mock_translator.py     # 离线 Mock
-│       ├── openai_translator.py   # OpenAI Chat Completions
-│       ├── deepl_translator.py    # DeepL API v2
-│       ├── google_free_translator.py  # Google 免费网页端点（无 Key，默认）
-│       ├── google_translator.py   # Google Translation v2
-│       └── factory.py             # 翻译器工厂
-├── workers/
-│   └── translation_worker.py      # 截图->OCR->合并->翻译->覆盖层 QThread 管线
-├── utils/
-│   ├── dpi_utils.py               # Per-Monitor DPI / 多显示器坐标换算
-│   ├── image_utils.py             # 亮度、缩放、格式转换
-│   ├── layout_utils.py            # 文本行分组合并、边界钳制
-│   ├── text_utils.py              # 占位符保护 / 还原
-│   └── language_utils.py          # 语言代码映射（各服务差异）
-└── tests/                         # 基础单元测试
-```
-
-## 安装
-
-要求 Python 3.11+（推荐 3.12）。
-
-只运行轻量版功能：
+Requires **Python 3.11+** (3.12 recommended).
 
 ```powershell
-cd screen_translator
+git clone https://github.com/xuange-hu/screen-translator.git
+cd screen-translator
 python -m venv .venv
 .\.venv\Scripts\Activate.ps1
 python -m pip install -r requirements-core.txt
-```
-
-需要在源码环境直接运行 PaddleOCR：
-
-```powershell
-python -m pip install -r requirements-paddle.txt
-```
-
-开发和测试使用 `requirements-dev.txt`。`requirements.txt` 保留为兼容入口，会安装完整开发依赖。
-
-> 轻量版首次启动不下载模型。Windows OCR 默认使用“自动检测”，依次尝试已安装的中文和英文 OCR 语言包；只有用户在“设置 → OCR”选择下载高精度组件时，才会下载 PaddleOCR 与模型并显示进度。
-
-## 运行
-
-```powershell
 python main.py
 ```
 
-首次启动后配置、日志、更新包与可选组件保存在 `%LOCALAPPDATA%\ScreenTranslator\`（也可用环境变量 `SCREEN_TRANSLATOR_CONFIG` 指向自定义配置文件）。
+Run it, then press the capture hotkey and select a region. Default hotkeys:
 
-默认快捷键：
-
-| 快捷键 | 动作 |
+| Hotkey | Action |
 | --- | --- |
-| Ctrl+Shift+A | 框选区域并翻译 |
-| Ctrl+Shift+F | 全屏翻译 |
-| Ctrl+Shift+W | 翻译当前窗口 |
-| Ctrl+Shift+H | 隐藏 / 显示覆盖层 |
-| Ctrl+Shift+R | 重新识别翻译上一次截图 |
+| `Ctrl+Shift+A` | Select a region and translate |
+| `Ctrl+Shift+F` | Translate the full screen |
+| `Ctrl+Shift+W` | Translate the current window |
+| `Ctrl+Shift+H` | Hide / show the overlay |
+| `Ctrl+Shift+R` | Re-recognize and re-translate the last capture |
 
-默认使用 **Google 免费翻译**（`translate.googleapis.com` gtx 端点，免注册、免 Key，单块并发请求，25 个文本块约 1~2 秒，无显式配额）。检测到 `OPENAI_API_KEY` / `DEEPL_API_KEY` / `GOOGLE_TRANSLATE_API_KEY` 时应用会自动切换到对应真实服务。在“设置 → 翻译”中可手动指定服务（手动选择后不再自动切换）。MyMemory 作为无 Key 后备可选，但匿名限速约 2 请求/秒且易 429。
+### Live region monitoring
 
-> MyMemory 英文→中文质量可用；中文→英文等反向翻译不稳定，需要高质量翻译请配置 OpenAI/DeepL/Google。
+1. Capture a region as usual (`Ctrl+Shift+A`).
+2. Start monitoring. The selection overlay stays on top with a faint border, eight resize handles, and a "拖拽调整 · 双击停止" hint.
+3. **Drag inside** the box to move the whole watched area; **drag a handle** to resize. The capture follows on release.
+4. New or changed text **fades in with a highlight**; unchanged text stays put — no full-screen flicker.
+5. **Double-click** the region (or use the monitor toggle) to stop.
 
-### 下载高精度 OCR
+Default translation is **Google free** (`translate.googleapis.com` gtx endpoint — no registration, no key). If `OPENAI_API_KEY` / `DEEPL_API_KEY` / `GOOGLE_TRANSLATE_API_KEY` are detected, the app switches to the matching real service automatically; you can also pick a provider manually in settings.
 
-打开“设置 → OCR → 可选高精度组件”，点击“下载 PaddleOCR 组件”。下载、校验和安装都在后台进行；取消或异常不会覆盖已有可用组件。保存设置后切换到 PaddleOCR。
+> To enable high-accuracy OCR, open *Settings → OCR → Optional high-accuracy component* and click *Download PaddleOCR component*.
 
-### 更新与诊断
+## Use cases
 
-- “设置 → 通用 → 软件更新”可检查 GitHub Releases；下载后先验证发布方 SHA-256，用户确认安装后会在执行前再次验证 Authenticode，任一步失败都不会启动安装包。
-- “设置 → 通用 → 诊断与支持”可导出 ZIP。压缩包采用白名单，不会遍历应用数据目录。
+- **Games & visual novels** with text baked into the framebuffer.
+- **Comics / manga / manhua** in a language you don't read.
+- **Videos & streams** with hardcoded subtitles.
+- **Legacy or locked desktop apps** where text can't be selected.
+- **Web content** behind canvas / non-selectable DOM.
 
-## 技术要点
+## How it works (technical)
 
-### DPI 与多显示器
+### DPI & multi-monitor
+The process enables Per-Monitor V2 (`SetProcessDpiAwarenessContext(-4)`) with graceful fallbacks, combined with Qt6 per-screen `devicePixelRatio`. Screenshots (mss) and `GetWindowRect` are physical pixels; Qt coordinates are logical. Each monitor keeps a `(physical rect, logical origin, dpr)` mapping; all conversions are done locally per monitor, then back to global. Overlay windows are created per monitor to avoid misalignment under mixed scaling. See `utils/dpi_utils.py`.
 
-- 进程启动时优先通过 `SetProcessDpiAwarenessContext(-4)` 启用 Per-Monitor V2，失败后再逐级回退，配合 Qt6 的 per-screen `devicePixelRatio`。
-- mss 截图与 Win32 `GetWindowRect` 都是物理像素；Qt 坐标是逻辑像素。
-- 每个显示器维护 `(物理矩形, 逻辑原点, dpr)` 映射，所有换算只在该显示器局部做偏移，再换算回全局；覆盖窗口按显示器分别创建，避免混合 DPI 时整体错位。详见 `utils/dpi_utils.py`。
+### Click-through overlay
+Overlay windows use `FramelessWindowHint | WindowStaysOnTopHint | Tool | WindowTransparentForInput` plus `WA_TransparentForMouseEvents`, so clicks pass through to the app underneath. Edit mode temporarily disables pass-through to allow dragging blocks.
 
-### 鼠标穿透
+### OCR coordinate mapping
+OCR returns boxes in the captured image's pixel space; the pipeline offsets them into global physical coordinates: `region.x = capture.bbox.left + box.x`. If the image's longest edge exceeds 4096, it is downscaled for recognition and coordinates are divided back by the scale.
 
-覆盖窗口使用 `FramelessWindowHint | WindowStaysOnTopHint | Tool | WindowTransparentForInput` + `WA_TransparentForMouseEvents`，鼠标点击直接穿透到下层程序。编辑模式下临时关闭穿透并允许拖动译文框。
+### Translating variable-length text
+The overlay auto-wraps and progressively shrinks the font (down to a minimum) based on the translation length and the text-box size, with a semi-transparent background for readability; if the translation is too long it contracts to fit the region height.
 
-### OCR 坐标映射
+### Background threads
+Each task spins a dedicated `PipelineTask(QThread)` and communicates with the main thread via Qt signals (status / error / result / finished). A new task cancels the old one; a `_stop` flag is checked across pipeline stages to prevent pile-up.
 
-OCR 输出是截图图像内的像素框，管线把框偏移到物理全局坐标：`region.x = capture.bbox.left + box.x`。若图像超长边 > 4096 会先缩放识别，再把坐标除以缩放比例还原。
-
-### 翻译文本长度变化
-
-覆盖层根据译文长度和文本框尺寸自动换行并逐级缩小字号（可设最小字号），背景半透明底保证可读性；若译文过长则按区域高度收缩显示。
-
-### 后台线程
-
-每次任务创建独立 `PipelineTask(QThread)`，通过 Qt 信号（status/error/result/finished）与主线程通信；新任务会先取消旧任务，`_stop` 标志在管线各阶段检查，避免任务堆积。
-
-## API Key 配置
-
-优先读取环境变量，其次读配置文件（`config.json` / `config.example.json`），不会硬编码进程序，日志中自动脱敏。
-
-```powershell
-# PowerShell 临时设置
-$env:OPENAI_API_KEY = "sk-..."
-$env:DEEPL_API_KEY = "xxx"
-$env:GOOGLE_TRANSLATE_API_KEY = "xxx"
-python main.py
-```
-
-或永久设置：
-
-```powershell
-setx OPENAI_API_KEY "sk-..."
-```
-
-也可以在“设置 → 翻译”中直接填写（会写入 `%LOCALAPPDATA%\ScreenTranslator\config.json`）。
-
-## 测试
-
-```powershell
-python -m pytest tests -v
-```
-
-覆盖：文本合并、DPI 换算、翻译缓存、配置读写、失败重试、占位符保护、覆盖层边界钳制。
-
-## 构建轻量安装包
+## Build a lightweight installer
 
 ```powershell
 python -m pip install -r requirements-core.txt pyinstaller
 .\scripts\build_lite.ps1 -Version 0.3.0-beta
 ```
 
-脚本先用 `build-lite.spec` 生成 `dist\ScreenTranslator-Lite.exe`，再调用 Inno Setup 6 生成安装器。构建会拒绝大于或等于 200,000,000 bytes 的安装包。轻量归档明确排除 Paddle、PaddleX、OpenCV、SciPy、scikit-learn 和 Torch。
+This builds `dist\ScreenTranslator-Lite.exe` via `build-lite.spec`, then calls Inno Setup 6 to produce the installer. The build rejects packages ≥ 200,000,000 bytes. The lightweight archive explicitly excludes Paddle, PaddleX, OpenCV, SciPy, scikit-learn, and Torch.
 
-只构建 EXE：
+Exe only: `.\scripts\build_lite.ps1 -Version 0.3.0-beta -SkipInstaller`
 
-```powershell
-.\scripts\build_lite.ps1 -Version 0.3.0-beta -SkipInstaller
-```
+Traditional full package: `python -m PyInstaller build.spec --noconfirm` (not the default download for v0.3.0-beta).
 
-传统完整包仍可用 `python -m PyInstaller build.spec --noconfirm` 构建，但不作为 v0.2.5-beta 的默认下载。
+### Code signing & releases
+Tagged releases are produced by `.github/workflows/release-windows.yml`. The repository must configure these GitHub Actions secrets:
 
-### 代码签名与发布
-
-标签发布由 `.github/workflows/release-windows.yml` 完成。仓库必须配置以下 GitHub Actions secrets：
-
-| Secret | 用途 |
+| Secret | Purpose |
 | --- | --- |
-| `WINDOWS_CERTIFICATE_PFX_BASE64` | Base64 编码的代码签名 PFX |
-| `WINDOWS_CERTIFICATE_PASSWORD` | PFX 密码 |
+| `WINDOWS_CERTIFICATE_PFX_BASE64` | Base64-encoded code-signing PFX |
+| `WINDOWS_CERTIFICATE_PASSWORD` | PFX password |
 
-流水线会依次签名主 EXE、安装器、卸载程序与 PaddleOCR worker，调用时间戳服务、验证 Authenticode、再次检查体积，并生成同名 `.sha256`。缺少签名凭据时发布直接失败，不会产出冒充“已签名”的文件。
+The pipeline signs the main exe, installer, uninstaller, and PaddleOCR worker, calls a timestamp service, verifies Authenticode, re-checks size, and emits a matching `.sha256`. Without signing credentials the release job fails rather than shipping an impersonated "signed" artifact.
 
-## 常见问题
+## FAQ
 
-### 识别结果为空
+**Recognition returns nothing.** Install the Windows OCR language pack for the target language; lower *OCR → Minimum confidence*; for hard fonts download and switch to PaddleOCR; confirm the region actually contains text.
 
-1. 确认 Windows 已安装目标语言的 OCR 包；2. 降低“OCR → 最低置信度”；3. 对复杂字体可按需下载并切换 PaddleOCR；4. 检查目标区域是否真的含文字。
+**OCR hangs after enabling text-orientation detection.** The orientation model can hang on some Paddle CPU builds. Disable *Enable text orientation detection* in settings; horizontal text is unaffected.
 
-### 开启“文字方向识别”后识别卡死
+**Overlay is misaligned on a scaled monitor.** Make sure the system display scaling is applied. Cross-scaling region selection is explicitly rejected; complete the selection within a single screen.
 
-方向识别模型（PP-LCNet_x1_0_textline_ori）在部分 paddle CPU 构建上会挂起。在设置中关闭“启用文字方向识别”即可；水平文字识别不受影响。
+**Hotkeys don't respond.** Another app (IME, recorder) may own them. Change the combo in *Settings → Hotkeys*; a failed registration is shown in the status bar.
 
-### 覆盖层位置偏了 / 缩放显示器上错位
+**"No API key" for translation.** Set the env var or fill it in settings; the Mock translator needs no key.
 
-确认系统“显示设置”中的缩放已生效。跨不同缩放比例显示器的框选会被明确拒绝，请在单个屏幕内完成框选，避免错误扩大截图范围。
+**Rate limited / 429.** Online services retry automatically and keep the original text shown; lower *Request interval* or raise your quota.
 
-### 快捷键没反应
+**`ConvertPirAttribute2RuntimeAttribute not support`.** Known oneDNN bug in paddlepaddle 3.3.x on Windows CPU. Pin paddlepaddle to 3.2.x: `python -m pip install "paddlepaddle>=3.2.2,<3.3.0"`.
 
-可能被其他软件占用（如输入法/录屏工具）。在“设置 → 快捷键”里换一组并保存；注册失败时主界面状态栏会提示。
+**Windows OCR asks for a language pack.** Install it, e.g. `Add-WindowsCapability -Online -Name "Language.OCR~~~en-US~0.0.1.0"`.
 
-### 翻译提示没有 API Key
+## Privacy
 
-按上文设置环境变量，或到设置里填写；Mock 翻译器不需要任何 Key。
+- Screenshots are not saved by default; image data is released after OCR/translation.
+- *General → Save screenshots and recognition history* is off by default.
+- Using an online translator sends recognized text to that third party (surfaced in the UI and docs).
+- Logs never record recognized text, screenshots, or API keys.
 
-### 翻译额度不足 / 429
+## Roadmap
 
-在线服务返回错误时会自动重试并保留原文显示，请检查账号额度；可通过“请求间隔”降低调用频率。
+- **v0.2.5-beta: overlay fix release.** Fixed OCR text-block coverage, paragraph translation, natural font sizing, color matching, overlay layout, translation latency, and failure recovery.
+- **v0.3.0-beta: live region translation (shipped).** Real-time change detection in a selected region; drag to adjust the area while monitoring; newly appeared / changed text fades in with a highlight.
+- **v0.4: scene presets & glossaries.** Controlled presets for game subtitles, visual novels, vertical manga, video captions, plus terminology memory.
+- **v1.0: signing, updates & stability.** Full release governance, long-run reliability, and natural overlay polish.
 
-### 打包后 OCR 不可用
+No mobile, macOS/Linux, browser-extension, cloud-account, or unrelated AI-chat scope.
 
-轻量版先检查 Windows OCR 语言包；PaddleOCR 必须通过设置页安装已发布的独立组件。源码完整包则使用 `build.spec`，不要把零散 Paddle DLL 手工塞进轻量版目录。
+## Contributing
 
-### 识别时报 `ConvertPirAttribute2RuntimeAttribute not support`
+Bug reports, feature ideas, and PRs are welcome. Please read [CONTRIBUTING.md](CONTRIBUTING.md) first. **Never commit API keys, local config, screenshots, or model caches.**
 
-paddlepaddle 3.3.x 在 Windows CPU 上的已知 oneDNN bug。请把 paddlepaddle 固定到 3.2.x：
+## ⭐ Help it grow
 
-```powershell
-python -m pip install "paddlepaddle>=3.2.2,<3.3.0"
-```
+If ScreenTranslator saves you time, a star is the cheapest way to help others find it — and it tells me which features to prioritize. Share it on your favorite community (see the submission copy in the repo discussions / issues), and open an issue with what you'd translate with it.
 
-### Windows OCR 提示需要语言包
+## License
 
-Windows.Media.Ocr 依赖系统 OCR 语言包。可在管理员 PowerShell 中安装对应语言，例如：
-
-```powershell
-Add-WindowsCapability -Online -Name "Language.OCR~~~en-US~0.0.1.0"
-```
-
-## 隐私说明
-
-- 默认不保存截图；OCR / 翻译完成后图片数据即释放。
-- “通用 → 保存截图与识别历史”默认关闭，开启后才写入指定目录。
-- 使用在线翻译时，识别出的文字会发送给对应第三方服务，界面与文档均有提示。
-- 日志不记录识别文本、截图或 API Key。
-
-## 路线图
-
-- **v0.2.5-beta：覆盖层修复版。** 修复 OCR 文本块覆盖、段落翻译、自然字号与颜色匹配，并改进翻译速度和失败恢复。
-- **v0.3：连续区域翻译（已实现）。** 框选一次后实时检测画面变化，只在文字变化时重抓并 OCR；监控期间可用鼠标拖拽调整选区，新出现/变化的文字淡入高亮。
-- **v0.4：场景预设与术语表。** 游戏字幕、视觉小说、漫画竖排、视频字幕等受控预设，以及术语记忆。
-- **v1.0：签名、更新与稳定性。** 完整发布治理、长期运行可靠性与自然覆盖效果。
-
-当前不扩展手机端、macOS/Linux、浏览器插件、云账号或无关 AI 聊天功能。
+[MIT](LICENSE) © 2026 ScreenTranslator contributors.
