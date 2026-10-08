@@ -99,6 +99,14 @@ def _run_selftest(qt_app, controller) -> None:
 
     log = get_logger("selftest")
     logging.getLogger("screen_translator.selftest").setLevel(logging.INFO)
+
+    engine = controller.ocr_engine
+    if type(engine).__name__ == "NullOCREngine" or not engine.available():
+        # CI runners (e.g. GitHub windows-latest, a Server build) often have no
+        # Windows.Media.Ocr engine. Skip instead of failing the release build.
+        log.warning("SELFTEST SKIPPED: no OCR engine available on this machine.")
+        qt_app.exit(0)
+        return
     log.info("SELFTEST START")
 
     image = Image.new("RGB", (700, 220), (245, 245, 245))

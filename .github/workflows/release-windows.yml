@@ -15,7 +15,10 @@ permissions:
   contents: write
 
 jobs:
-  release-windows-lite:
+  # Lightweight build: always runs on tag/dispatch and produces an unsigned
+  # installer when no code-signing certificate is configured. Signing is
+  # optional and only kicks in if WINDOWS_CERTIFICATE_PFX_BASE64 is set.
+  release-lite:
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v4
@@ -88,6 +91,8 @@ jobs:
 
       - name: Verify frozen lightweight executable
         shell: pwsh
+        env:
+          QT_QPA_PLATFORM: offscreen
         run: |
           $verifyRoot = "$env:RUNNER_TEMP\screen-translator-lite-verification"
           New-Item -ItemType Directory -Force -Path $verifyRoot | Out-Null
@@ -101,23 +106,83 @@ jobs:
           $selftest = Start-Process -FilePath .\dist\ScreenTranslator-Lite.exe -PassThru -Wait -WindowStyle Hidden
           if ($selftest.ExitCode -ne 0) { throw "Frozen OCR self-test failed ($($selftest.ExitCode))." }
           $logPath = Join-Path $verifyRoot "logs\app.log"
-          if (-not (Test-Path -LiteralPath $logPath) -or (Get-Content -Raw -LiteralPath $logPath) -notmatch "SELFTEST OK") {
-            throw "Frozen OCR self-test did not emit SELFTEST OK."
+          if (-not (Test-Path -LiteralPath $logPath) -or (Get-Content -Raw -LiteralPath $logPath) -notmatch "SELFTEST SKIPPED|SELFTEST OK") {
+            throw "Frozen OCR self-test did not emit SELFTEST OK or SELFTEST SKIPPED."
           }
 
-      - name: Sign lightweight executable
+      - name: Sign lightweight executable (optional)
+        if: ${{ secrets.WINDOWS_CERTIFICATE_PFX_BASE64 != '' }}
         shell: pwsh
         env:
           WINDOWS_CERTIFICATE_PFX_BASE64: ${{ secrets.WINDOWS_CERTIFICATE_PFX_BASE64 }}
           WINDOWS_CERTIFICATE_PASSWORD: ${{ secrets.WINDOWS_CERTIFICATE_PASSWORD }}
         run: .\scripts\sign_release.ps1 -Path .\dist\ScreenTranslator-Lite.exe
 
-      - name: Build signed lightweight installer and uninstaller
+      - name: Build lightweight installer
         shell: pwsh
         env:
           WINDOWS_CERTIFICATE_PFX_BASE64: ${{ secrets.WINDOWS_CERTIFICATE_PFX_BASE64 }}
           WINDOWS_CERTIFICATE_PASSWORD: ${{ secrets.WINDOWS_CERTIFICATE_PASSWORD }}
-        run: .\scripts\build_lite.ps1 -Version "${{ steps.version.outputs.value }}" -OutputDirectory "$env:RELEASE_DIR" -SkipAppBuild -SignWithReleaseCertificate
+        run: |
+          $sign = if ($env:WINDOWS_CERTIFICATE_PFX_BASE64) { "-SignWithReleaseCertificate" } else { "" }
+          .\scripts\build_lite.ps1 -Version "${{ steps.version.outputs.value }}" -OutputDirectory "$env:RELEASE_DIR" -SkipAppBuild $sign
+
+      - name: Publish GitHub release assets
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v${{ steps.version.outputs.value }}
+          target_commitish: ${{ github.sha }}
+          generate_release_notes: true
+          prerelease: ${{ steps.version.outputs.prerelease }}
+          make_latest: ${{ steps.version.outputs.make_latest }}
+          overwrite_files: false
+          fail_on_unmatched_files: true
+          files: |
+            ${{ env.RELEASE_DIR }}\ScreenTranslator-Lite-${{ steps.version.outputs.value }}-Setup.exe
+            ${{ env.RELEASE_DIR }}\ScreenTranslator-Lite-${{ steps.version.outputs.value }}-Setup.exe.sha256
+            .\dist\ScreenTranslator-Lite.exe
+
+  # Optional PaddleOCR component: only built and signed when a code-signing
+  # certificate is configured, because the component manifest must be signed.
+  release-component:
+    needs: release-lite
+    if: ${{ secrets.WINDOWS_CERTIFICATE_PFX_BASE64 != '' }}
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set version
+        id: version
+        shell: pwsh
+        env:
+          RELEASE_VERSION_INPUT: ${{ inputs.version }}
+        run: |
+          $version = if ($env:GITHUB_EVENT_NAME -eq "workflow_dispatch") {
+            $env:RELEASE_VERSION_INPUT
+          } else {
+            if (-not $env:GITHUB_REF_NAME.StartsWith("v")) { throw "Release tag must start with v." }
+            $env:GITHUB_REF_NAME.Substring(1)
+          }
+          if ($version -notmatch '^\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?$') { throw "Invalid release version: $version" }
+          $isPrerelease = $version.Contains("-")
+          "value=$version" >> $env:GITHUB_OUTPUT
+          "prerelease=$($isPrerelease.ToString().ToLowerInvariant())" >> $env:GITHUB_OUTPUT
+          "make_latest=$(((-not $isPrerelease)).ToString().ToLowerInvariant())" >> $env:GITHUB_OUTPUT
+          "RELEASE_DIR=$env:RUNNER_TEMP\screen-translator-release" >> $env:GITHUB_ENV
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+          cache-dependency-path: requirements-paddle.txt
+
+      - name: Install build dependencies
+        shell: pwsh
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -r requirements-core.txt pytest "pyinstaller<7"
+          choco install innosetup --no-progress --yes
 
       - name: Install optional PaddleOCR component dependencies
         shell: pwsh
@@ -186,19 +251,17 @@ jobs:
           $version = "${{ steps.version.outputs.value }}"
           .\scripts\verify_paddle_component.ps1 -ArchivePath "$env:RELEASE_DIR\PaddleOCRComponent-$version-windows.zip" -ManifestPath "$env:RELEASE_DIR\paddle-component-manifest.json" -ManifestSignaturePath "$env:RELEASE_DIR\paddle-component-manifest.p7s"
 
-      - name: Publish GitHub release assets
+      - name: Publish component assets
         uses: softprops/action-gh-release@v2
         with:
           tag_name: v${{ steps.version.outputs.value }}
           target_commitish: ${{ github.sha }}
-          generate_release_notes: true
+          generate_release_notes: false
           prerelease: ${{ steps.version.outputs.prerelease }}
           make_latest: ${{ steps.version.outputs.make_latest }}
           overwrite_files: false
           fail_on_unmatched_files: true
           files: |
-            ${{ env.RELEASE_DIR }}\ScreenTranslator-Lite-${{ steps.version.outputs.value }}-Setup.exe
-            ${{ env.RELEASE_DIR }}\ScreenTranslator-Lite-${{ steps.version.outputs.value }}-Setup.exe.sha256
             ${{ env.RELEASE_DIR }}\PaddleOCRComponent-${{ steps.version.outputs.value }}-windows.zip
             ${{ env.RELEASE_DIR }}\paddle-component-manifest.json
             ${{ env.RELEASE_DIR }}\paddle-component-manifest.p7s
