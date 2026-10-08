@@ -76,7 +76,12 @@ def test_full_motion_reuses_objects_and_does_not_replay_old_content(
 
     overlay.hide_fade()
     assert hide.state() == QAbstractAnimation.State.Running
-    QTest.qWait(FAST + 50)
+    # 等隐藏动画真正结束（headless 软件渲染下耗时不稳定，按终态等待而非固定时长）。
+    for _ in range(40):
+        qapp.processEvents()
+        if not overlay.isVisible():
+            break
+        QTest.qWait(25)
     assert not overlay.isVisible()
 
     # Showing the same translated result again only fades the window. The

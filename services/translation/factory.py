@@ -13,6 +13,9 @@ _SERVICE_DISPLAY = {
     "openai": "OpenAI",
     "deepl": "DeepL",
     "google": "Google 翻译",
+    "baidu": "百度翻译",
+    "youdao": "有道翻译",
+    "azure": "Azure 翻译",
 }
 
 

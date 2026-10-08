@@ -200,3 +200,64 @@ def to_mymemory_lang(code: str) -> str:
         "zh": "zh-CN",
         "zh-hant": "zh-TW",
     }.get(code, code)
+
+
+def to_baidu_lang(code: str) -> str:
+    return {
+        "auto": "auto",
+        "zh": "zh",
+        "zh-hant": "zh",
+        "en": "en",
+        "ja": "jp",
+        "ko": "kor",
+        "fr": "fra",
+        "de": "de",
+        "es": "spa",
+        "ru": "ru",
+        "pt": "pt",
+        "it": "it",
+        "vi": "vie",
+        "th": "th",
+        "ar": "ar",
+    }.get(code, code)
+
+
+def to_youdao_lang(code: str) -> str:
+    return {
+        "auto": "auto",
+        "zh": "zh-CHS",
+        "zh-hant": "zh-CHT",
+        "en": "en",
+        "ja": "ja",
+        "ko": "ko",
+        "fr": "fr",
+        "de": "de",
+        "es": "es",
+        "ru": "ru",
+        "pt": "pt",
+        "it": "it",
+        "vi": "vi",
+        "th": "th",
+        "ar": "ar",
+    }.get(code, code)
+
+
+def to_azure_lang(code: str) -> str:
+    # Azure 源语言省略即自动检测；目标语言用标准区域代码。
+    return {
+        "auto": "",
+        "zh": "zh-Hans",
+        "zh-hant": "zh-Hant",
+        "en": "en",
+        "ja": "ja",
+        "ko": "ko",
+        "fr": "fr",
+        "de": "de",
+        "es": "es",
+        "ru": "ru",
+        "pt": "pt-BR",
+        "it": "it",
+        "vi": "vi",
+        "th": "th",
+        "ar": "ar",
+    }.get(code, code)

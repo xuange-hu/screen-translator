@@ -30,6 +30,32 @@ def text_color_for_luminance(luminance: float) -> str:
     return "#000000" if luminance >= 0.55 else "#FFFFFF"
 
 
+def frame_signature(image_bgr: np.ndarray, size: int = 16) -> str:
+    """对一帧画面算一个稳定感知哈希（dhash），用于监控模式判断「画面是否变化」。
+
+    返回 16 进制字符串；画面为空或无法处理时返回空串（调用方应视为「变化」）。
+    降采样到 (size+1, size) 做相邻列梯度比较，对缩放/小幅抖动不敏感。
+    """
+    if image_bgr is None:
+        return ""
+    arr = np.asarray(image_bgr)
+    if arr.ndim != 3 or arr.size == 0:
+        return ""
+    h, w = arr.shape[:2]
+    gray = arr[..., :3].reshape(h * w, 3).astype(np.float32)
+    gray = gray[:, 0] * 0.299 + gray[:, 1] * 0.587 + gray[:, 2] * 0.114
+    gray = gray.reshape(h, w)
+    sh, sw = size + 1, size
+    ys = np.linspace(0, h, sh + 1).astype(int)
+    xs = np.linspace(0, w, sw + 1).astype(int)
+    small = np.empty((sh, sw), dtype=np.float32)
+    for i in range(sh):
+        for j in range(sw):
+            small[i, j] = gray[ys[i]:ys[i + 1], xs[j]:xs[j + 1]].mean()
+    diff = small[:, 1:] > small[:, :-1]
+    return diff.flatten().tobytes().hex()
+
+
 def rgb_to_hex(rgb) -> str:
     """把 BGR 数组/元组转成 '#RRGGBB'（图像以 BGR 存储，通道需反转）。"""
     b, g, r = (int(round(float(v))) for v in rgb[:3])

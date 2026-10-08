@@ -141,8 +141,11 @@ class Application(QObject):
         self._monitor_timer.timeout.connect(self._monitor_cycle)
         self._monitor_known: dict[str, str] = {}
         self._monitor_signature = ""
+        self._monitor_frame_hash = ""
         self._monitor_errors = 0
         self._monitor_no_text = False
+        self._last_original_text = ""
+        self._last_translated_text = ""
         self._monitor_region_selector = None
 
         try:
@@ -198,10 +201,29 @@ class Application(QObject):
             log.exception("应用启动失败")
             QMessageBox.critical(None, "启动失败", f"{exc}")
 
+    def copy_original(self) -> None:
+        self._copy_to_clipboard(self._last_original_text, "原文")
+
+    def copy_translation(self) -> None:
+        self._copy_to_clipboard(self._last_translated_text, "译文")
+
+    def _copy_to_clipboard(self, text: str, label: str) -> None:
+        from PySide6.QtWidgets import QApplication
+
+        if not text:
+            self.set_status(f"没有可复制的{label}")
+            return
+        QApplication.clipboard().setText(text)
+        self.set_status(f"已复制{label}到剪贴板（{len(text)} 字）")
+
     def shutdown(self) -> None:
         if self._shutting_down:
             return
         self._shutting_down = True
+        try:
+            self.screenshot_service.close()
+        except Exception:
+            pass
         self._foreground_tracker.stop()
         self._capture_timer.stop()
         self._selection_timer.stop()
@@ -873,6 +895,10 @@ class Application(QObject):
             )
         self.floating_status.set_text("翻译完成")
         self._save_history(capture, regions)
+        original = "\n".join(str(getattr(r, "text", "") or "") for r in regions)
+        translated = "\n".join(str(getattr(r, "translated_text", "") or "") for r in regions)
+        self._last_original_text = original
+        self._last_translated_text = translated
 
     # ------------------------------------------------------------------ monitor
     def toggle_monitor(self) -> None:
@@ -910,6 +936,7 @@ class Application(QObject):
         self._monitor_no_text = False
         self._monitor_known = {}
         self._monitor_signature = ""
+        self._monitor_frame_hash = ""
         self._set_busy(True)
         self.set_status("实时监控已开启，页面一动就会自动重译")
         if self.window is not None:
@@ -926,6 +953,7 @@ class Application(QObject):
         self._monitor_request = None
         self._monitor_known = {}
         self._monitor_signature = ""
+        self._monitor_frame_hash = ""
         self._dispose_monitor_region()
         self._cancel_worker()
         self._set_busy(False)
@@ -936,6 +964,8 @@ class Application(QObject):
         self.set_status(reason or "已停止实时监控")
 
     def _monitor_cycle(self) -> None:
+        from utils.image_utils import frame_signature
+
         if not self._monitor_active or self._shutting_down:
             return
         request = self._monitor_request
@@ -962,6 +992,12 @@ class Application(QObject):
             return
         capture.mode = request["mode"]
         self._last_capture = capture
+        # 像素差异门控：画面完全没变就跳过整轮 OCR + 翻译管线，覆盖层保持，省资源。
+        frame_hash = frame_signature(capture.image)
+        if self._monitor_frame_hash and self._monitor_frame_hash == frame_hash and self._monitor_signature:
+            self._monitor_schedule_next()
+            return
+        self._monitor_frame_hash = frame_hash
         # 把上一轮译文写回缓存：内容没变过的文本块直接命中缓存，几乎瞬时返回，
         # 只有新出现/变化的文字才真正走网络——这就是“特别快”的来源。
         if (

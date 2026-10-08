@@ -402,6 +402,20 @@ class TranslationOverlayWindow(QWidget):
     def mouseReleaseEvent(self, event) -> None:
         self._drag_index = None
 
+    def contextMenuEvent(self, event) -> None:
+        from PySide6.QtWidgets import QMenu, QApplication
+
+        original = "\n".join(str(getattr(b, "text", "") or "") for b in self._blocks)
+        translated = "\n".join(str(getattr(b, "translated_text", "") or "") for b in self._blocks)
+        menu = QMenu(self)
+        act_src = menu.addAction("复制原文")
+        act_tr = menu.addAction("复制译文")
+        chosen = menu.exec(event.globalPos())
+        if chosen is act_src and original:
+            QApplication.clipboard().setText(original)
+        elif chosen is act_tr and translated:
+            QApplication.clipboard().setText(translated)
+
     def _on_escape(self) -> None:
         if self._edit_mode:
             self.close_requested.emit()
@@ -618,9 +632,14 @@ class TranslationOverlayWindow(QWidget):
         ]
         return families
 
-    @staticmethod
-    def _make_font(families: list[str], size: int) -> QFont:
+    def _make_font(self, families: list[str], size: int) -> QFont:
+        # 按 (字体族, 字号) 缓存 QFont，避免 _fit_font 逐字号循环时反复重建对象。
+        key = (tuple(families), int(size))
+        cached = self._font_cache.get(key)
+        if cached is not None:
+            return cached
         font = QFont()
-        font.setFamilies(families)
-        font.setPointSize(size)
+        font.setFamilies(list(families))
+        font.setPointSize(int(size))
+        self._font_cache[key] = font
         return font

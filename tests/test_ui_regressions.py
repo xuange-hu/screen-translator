@@ -64,8 +64,10 @@ def _wait_until(qapp, predicate, *, timeout_ms: int = 1400) -> None:
 
 def _assert_settings_deck_frame(qapp, window, page, progress: float) -> int:
     """Assert the two real pages meet at one exact integer seam."""
+    # 不调用 processEvents：否则事件循环会派发设置过渡动画的定时器，
+    # 在 headless 软件渲染变慢时一次 processEvents 就会把进度推进很多，
+    # 导致刚 set 的进度被动画覆盖。_apply_settings_frame 已同步设置好几何。
     window._set_settings_progress(progress)
-    qapp.processEvents()
 
     deck = window._pages
     bounds = deck.rect()
@@ -985,11 +987,11 @@ def test_settings_switch_preserves_the_full_page_curtain(
     assert dialog.pages.currentIndex() == 0
     assert dialog._queued_page is None
 
-    QTest.qWait(210)
+    _wait_until(qapp, lambda: dialog.pages.currentIndex() == 1)
     assert dialog.pages.currentIndex() == 1
     assert handoffs == [(1, QRect(0, 0, host.width(), host.height()))]
     assert dialog._page_sweep_out.endValue().x() == -host.width()
-    QTest.qWait(210)
+    _wait_until(qapp, lambda: not dialog._page_sweep.isVisible())
     assert not dialog._page_sweep.isVisible()
     dialog.hide()
     dialog.deleteLater()
@@ -1013,18 +1015,18 @@ def test_settings_switch_queues_latest_page_and_recomputes_direction(
     assert dialog._pending_page == 5
     assert dialog._queued_page == 1
 
-    QTest.qWait(210)
-    assert dialog.pages.currentIndex() == 5
-    QTest.qWait(210)
+    # 等到第一次交接真正完成（currentIndex 落到 5 且 pending 已推进到下一次排队的 1），
+    # 而非刚翻页的瞬间，避免状态机时序抖动。
+    _wait_until(qapp, lambda: dialog.pages.currentIndex() == 5 and dialog._pending_page == 1)
     assert dialog.pages.currentIndex() == 5
     assert dialog._pending_page == 1
     assert not dialog._sweep_moving_down
     assert dialog._page_sweep.x() < 0
 
-    QTest.qWait(210)
+    _wait_until(qapp, lambda: dialog.pages.currentIndex() == 1)
     assert dialog.pages.currentIndex() == 1
     assert dialog._page_sweep_out.endValue().x() == host.width()
-    QTest.qWait(210)
+    _wait_until(qapp, lambda: not dialog._page_sweep.isVisible())
     assert not dialog._page_sweep.isVisible()
     dialog.hide()
     dialog.deleteLater()

@@ -5,6 +5,7 @@ from __future__ import annotations
 import requests
 
 from services.translation.base import TranslationError, Translator, register_translator
+from services.translation.http_errors import raise_for_status
 from utils.language_utils import to_deepl_lang
 
 
@@ -40,12 +41,8 @@ class DeepLTranslator(Translator):
         except requests.RequestException as exc:
             raise TranslationError("DeepL 请求失败（网络连接异常）") from exc
         response.encoding = "utf-8"
-        if response.status_code == 403:
-            raise TranslationError("DeepL API Key 无效")
-        if response.status_code == 456:
-            raise TranslationError("DeepL 翻译额度不足（456）")
         if response.status_code != 200:
-            raise TranslationError(f"DeepL 返回错误 {response.status_code}")
+            raise_for_status(response, "DeepL")
         try:
             translations = response.json()["translations"]
             return [item["text"] for item in translations]

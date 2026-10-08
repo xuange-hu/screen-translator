@@ -31,9 +31,10 @@ Some text simply cannot be selected: games, comics, videos, images, legacy deskt
 - Region selection supports negative multi-monitor coordinates, exact open-interval coordinates, `Esc` to cancel, and a cross-scaling safety check.
 - Default OCR is `Windows.Media.Ocr` (no bundled models). High-accuracy **PaddleOCR** is an optional component downloaded with a live progress bar, verified via HTTPS manifest, protocol version, file size, SHA-256, and Authenticode before atomic install.
 - OCR emits unified text / rect / confidence / orientation / text-line output, with confidence filtering and adjacent-block merging.
-- Unified `Translator` interface: built-in `Mock` (offline-testable), **Google free** (no key, concurrent block translation), MyMemory, OpenAI-compatible, DeepL, and Google Cloud Translation v2. Batch translation, exponential-backoff retry, timeout, request rate-limiting, and a JSON result cache.
+- Unified `Translator` interface: built-in `Mock` (offline-testable), **Google free** (no key, concurrent block translation), MyMemory, OpenAI-compatible, DeepL, Google Cloud Translation v2, **百度翻译**, **有道翻译**, and **Azure AI 翻译**. Batch translation, exponential-backoff retry, timeout, request rate-limiting, and a JSON result cache. 百度/有道/Azure 的密钥可在「设置 → 翻译」填写，或用环境变量 `BAIDU_APP_ID`/`BAIDU_APP_KEY`、`YOUDAO_APP_KEY`/`YOUDAO_APP_SECRET`、`AZURE_TRANSLATOR_KEY`/`AZURE_TRANSLATOR_REGION`。
 - Protects numbers / URLs / emails / placeholders / variables before translation so they aren't mangled.
-- Transparent always-on-top overlay: click-through, auto-wrap, auto font-shrink, light/dark text chosen by background brightness, semi-transparent background, global hide/show.
+- Transparent always-on-top overlay: click-through, auto-wrap, auto font-shrink, light/dark text chosen by background brightness, semi-transparent background, global hide/show. **Right-click the overlay (or use the tray menu) to copy the original / translated text to the clipboard.**
+- 实时监控对静止画面做像素差异检测：画面没变时跳过整轮 OCR + 翻译，仅刷新覆盖层，CPU 占用大幅下降。
 - Edit mode: drag individual translated blocks; `Esc` exits and closes the overlay.
 - Global hotkeys via `pynput`, editable in settings with conflict detection.
 - System tray with capture / full-screen / window / hide / edit / refresh / settings / quit.
@@ -74,7 +75,7 @@ Run it, then press the capture hotkey and select a region. Default hotkeys:
 4. New or changed text **fades in with a highlight**; unchanged text stays put — no full-screen flicker.
 5. **Double-click** the region (or use the monitor toggle) to stop.
 
-Default translation is **Google free** (`translate.googleapis.com` gtx endpoint — no registration, no key). If `OPENAI_API_KEY` / `DEEPL_API_KEY` / `GOOGLE_TRANSLATE_API_KEY` are detected, the app switches to the matching real service automatically; you can also pick a provider manually in settings.
+Default translation is **Google free** (`translate.googleapis.com` gtx endpoint — no registration, no key). If `OPENAI_API_KEY` / `DEEPL_API_KEY` / `GOOGLE_TRANSLATE_API_KEY`（或百度 / 有道 / Azure 凭据）are detected, the app switches to the matching real service automatically; you can also pick a provider manually in settings.
 
 > To enable high-accuracy OCR, open *Settings → OCR → Optional high-accuracy component* and click *Download PaddleOCR component*.
 

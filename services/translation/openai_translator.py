@@ -9,6 +9,7 @@ from typing import Any
 import requests
 
 from services.translation.base import TranslationError, Translator, register_translator
+from services.translation.http_errors import raise_for_status
 from utils.language_utils import to_openai_lang
 
 DEFAULT_GLOSSARY = """\
@@ -104,12 +105,8 @@ class OpenAITranslator(Translator):
             raise TranslationError("OpenAI 请求失败（超时或网络错误）") from exc
 
         response.encoding = "utf-8"
-        if response.status_code == 401:
-            raise TranslationError("OpenAI API Key 无效或已过期")
-        if response.status_code == 429:
-            raise TranslationError("OpenAI 请求频率或额度受限（429）")
         if response.status_code != 200:
-            raise TranslationError(f"OpenAI 返回错误 {response.status_code}")
+            raise_for_status(response, "OpenAI")
 
         try:
             content = response.json()["choices"][0]["message"]["content"]

@@ -7,6 +7,7 @@ import html
 import requests
 
 from services.translation.base import TranslationError, Translator, register_translator
+from services.translation.http_errors import raise_for_status
 from utils.language_utils import to_google_lang
 
 
@@ -42,10 +43,8 @@ class GoogleTranslator(Translator):
         except requests.RequestException as exc:
             raise TranslationError("Google 翻译请求失败（网络连接异常）") from exc
         response.encoding = "utf-8"
-        if response.status_code == 403:
-            raise TranslationError("Google API Key 无效或未启用 Translation API（403）")
         if response.status_code != 200:
-            raise TranslationError(f"Google 返回错误 {response.status_code}")
+            raise_for_status(response, "Google")
         try:
             items = response.json()["data"]["translations"]
             return [html.unescape(item["translatedText"]) for item in items]

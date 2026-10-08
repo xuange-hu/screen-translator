@@ -90,6 +90,21 @@ DEFAULTS: dict[str, Any] = {
             "api_key": "",
             "base_url": "https://translation.googleapis.com/language/translate/v2",
         },
+        "baidu": {
+            "appid": "",
+            "api_key": "",
+            "base_url": "https://fanyi-api.baidu.com/api/trans/vip/translate",
+        },
+        "youdao": {
+            "app_key": "",
+            "app_secret": "",
+            "base_url": "https://openapi.youdao.com/api",
+        },
+        "azure": {
+            "api_key": "",
+            "region": "",
+            "base_url": "https://api.cognitive.microsofttranslator.com",
+        },
     },
     "overlay": {
         "background_color": "#000000",
@@ -129,6 +144,11 @@ _KEY_SECTIONS = (
     "translation.openai.api_key",
     "translation.deepl.api_key",
     "translation.google.api_key",
+    "translation.baidu.appid",
+    "translation.baidu.api_key",
+    "translation.youdao.app_key",
+    "translation.youdao.app_secret",
+    "translation.azure.api_key",
 )
 
 
@@ -301,6 +321,9 @@ class AppConfig:
             "openai": "OPENAI_API_KEY",
             "deepl": "DEEPL_API_KEY",
             "google": "GOOGLE_TRANSLATE_API_KEY",
+            "baidu": "BAIDU_APP_KEY",
+            "youdao": "YOUDAO_APP_KEY",
+            "azure": "AZURE_TRANSLATOR_KEY",
         }
         env_value = os.environ.get(env_map.get(service, ""), "")
         if env_value:

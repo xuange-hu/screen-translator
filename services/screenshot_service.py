@@ -22,6 +22,15 @@ class ScreenshotService:
             self._sct = mss.mss()
         return self._sct
 
+    def close(self) -> None:
+        """释放底层 mss 截图资源，进程退出时调用。"""
+        if self._sct is not None:
+            try:
+                self._sct.close()
+            except Exception:
+                pass
+            self._sct = None
+
     def monitors(self) -> list[dict]:
         return list(self._get_sct().monitors)
 
