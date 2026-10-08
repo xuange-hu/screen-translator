@@ -124,7 +124,7 @@ Tagged releases are produced by `.github/workflows/release-windows.yml`. The rep
 | `WINDOWS_CERTIFICATE_PFX_BASE64` | Base64-encoded code-signing PFX |
 | `WINDOWS_CERTIFICATE_PASSWORD` | PFX password |
 
-The pipeline signs the main exe, installer, uninstaller, and PaddleOCR worker, calls a timestamp service, verifies Authenticode, re-checks size, and emits a matching `.sha256`. Without signing credentials the release job fails rather than shipping an impersonated "signed" artifact.
+The pipeline signs the main exe, installer, uninstaller, and PaddleOCR worker, calls a timestamp service, verifies Authenticode, re-checks size, and emits a matching `.sha256`. **Without signing credentials**, the pipeline skips signing and publishes an unsigned lightweight installer (the PaddleOCR component is skipped, since its manifest must be signed); **with** `WINDOWS_CERTIFICATE_PFX_BASE64` / `WINDOWS_CERTIFICATE_PASSWORD` configured, it signs everything and also ships the PaddleOCR component.
 
 ## FAQ
 
