@@ -1,0 +1,4 @@
+# Backward-compatible full development environment.
+# End users receive requirements-core in the lightweight build; PaddleOCR is
+# delivered as an optional component instead of bloating the first download.
+-r requirements-dev.txt

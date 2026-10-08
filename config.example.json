@@ -1,0 +1,95 @@
+{
+  "general": {
+    "startup_with_system": false,
+    "minimize_to_tray": true,
+    "save_history": false,
+    "history_dir": ""
+  },
+  "updates": {
+    "auto_check": true,
+    "include_prereleases": false,
+    "repository": "nimbus-translate/screen-translator"
+  },
+  "appearance": {
+    "schema_version": 1,
+    "palette": "warm_paper",
+    "accent": "#2878E8",
+    "motion_profile": "flow",
+    "density": "balanced",
+    "surface": "layered",
+    "reduce_motion": false
+  },
+  "capture": {
+    "select_mask_opacity": 84
+  },
+  "ocr": {
+    "engine": "windows",
+    "lang": "auto",
+    "min_confidence": 0.6,
+    "merge_y_tolerance_ratio": 0.3,
+    "merge_x_gap_ratio": 0.8,
+    "paddle": {
+      "use_gpu": false,
+      "text_detection_model_name": "PP-OCRv5_mobile_det",
+      "text_recognition_model_name": "PP-OCRv5_mobile_rec",
+      "use_textline_orientation": false,
+      "component_manifest_url": "https://github.com/nimbus-translate/screen-translator/releases/latest/download/paddle-component-manifest.json"
+    }
+  },
+  "translation": {
+    "service": "google_free",
+    "auto_select_service": true,
+    "mock_mode": "dictionary",
+    "glossary": "",
+    "source_language": "auto",
+    "target_language": "zh",
+    "keep_original": false,
+    "timeout_seconds": 30,
+    "max_retries": 3,
+    "retry_delay_seconds": 1.0,
+    "request_interval_seconds": 0.0,
+    "google_free_max_workers": 4,
+    "google_free_interval": 0.05,
+    "google_free_partial_retries": 0,
+    "google_free_retry_backoff": 0.35,
+    "google_free_fallback_to_mymemory": true,
+    "cache_ttl_days": 30,
+    "cache_max_entries": 2000,
+    "openai": {
+      "api_key": "",
+      "base_url": "https://api.openai.com/v1",
+      "model": "gpt-4o-mini"
+    },
+    "deepl": {
+      "api_key": "",
+      "base_url": "https://api-free.deepl.com/v2",
+      "formality": "default"
+    },
+    "google": {
+      "api_key": "",
+      "base_url": "https://translation.googleapis.com/language/translate/v2"
+    }
+  },
+  "overlay": {
+    "background_color": "#000000",
+    "auto_background": true,
+    "background_alpha": 160,
+    "font_family": "",
+    "font_size": 18,
+    "text_color": "#FFFFFF",
+    "use_auto_text_color": true,
+    "padding": 4,
+    "border_radius": 4,
+    "border_color": "#FFFFFF",
+    "border_alpha": 60,
+    "show_border": true,
+    "min_font_size": 8
+  },
+  "hotkeys": {
+    "capture_region": "ctrl+shift+a",
+    "capture_fullscreen": "ctrl+shift+f",
+    "capture_window": "ctrl+shift+w",
+    "toggle_overlay": "ctrl+shift+h",
+    "refresh": "ctrl+shift+r"
+  }
+}
