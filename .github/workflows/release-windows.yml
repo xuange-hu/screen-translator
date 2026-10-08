@@ -20,8 +20,20 @@ jobs:
   # optional and only kicks in if WINDOWS_CERTIFICATE_PFX_BASE64 is set.
   release-lite:
     runs-on: windows-latest
+    outputs:
+      has_certificate: ${{ steps.signing.outputs.has_certificate }}
     steps:
       - uses: actions/checkout@v4
+
+      - name: Detect code-signing certificate
+        id: signing
+        shell: pwsh
+        env:
+          CERTIFICATE_PFX_BASE64: ${{ secrets.WINDOWS_CERTIFICATE_PFX_BASE64 }}
+        run: |
+          $hasCertificate = -not [string]::IsNullOrWhiteSpace($env:CERTIFICATE_PFX_BASE64)
+          "has_certificate=$($hasCertificate.ToString().ToLowerInvariant())" >> $env:GITHUB_OUTPUT
+          if ($hasCertificate) { "Code signing: enabled" } else { "Code signing: disabled (no certificate secret configured)" }
 
       - name: Set version
         id: version
@@ -111,7 +123,7 @@ jobs:
           }
 
       - name: Sign lightweight executable (optional)
-        if: ${{ secrets.WINDOWS_CERTIFICATE_PFX_BASE64 != '' }}
+        if: steps.signing.outputs.has_certificate == 'true'
         shell: pwsh
         env:
           WINDOWS_CERTIFICATE_PFX_BASE64: ${{ secrets.WINDOWS_CERTIFICATE_PFX_BASE64 }}
@@ -124,8 +136,11 @@ jobs:
           WINDOWS_CERTIFICATE_PFX_BASE64: ${{ secrets.WINDOWS_CERTIFICATE_PFX_BASE64 }}
           WINDOWS_CERTIFICATE_PASSWORD: ${{ secrets.WINDOWS_CERTIFICATE_PASSWORD }}
         run: |
-          $sign = if ($env:WINDOWS_CERTIFICATE_PFX_BASE64) { "-SignWithReleaseCertificate" } else { "" }
-          .\scripts\build_lite.ps1 -Version "${{ steps.version.outputs.value }}" -OutputDirectory "$env:RELEASE_DIR" -SkipAppBuild $sign
+          if ($env:WINDOWS_CERTIFICATE_PFX_BASE64) {
+            .\scripts\build_lite.ps1 -Version "${{ steps.version.outputs.value }}" -OutputDirectory "$env:RELEASE_DIR" -SkipAppBuild -SignWithReleaseCertificate
+          } else {
+            .\scripts\build_lite.ps1 -Version "${{ steps.version.outputs.value }}" -OutputDirectory "$env:RELEASE_DIR" -SkipAppBuild
+          }
 
       - name: Publish GitHub release assets
         uses: softprops/action-gh-release@v2
@@ -146,7 +161,7 @@ jobs:
   # certificate is configured, because the component manifest must be signed.
   release-component:
     needs: release-lite
-    if: ${{ secrets.WINDOWS_CERTIFICATE_PFX_BASE64 != '' }}
+    if: needs.release-lite.outputs.has_certificate == 'true'
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v4
