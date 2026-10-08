@@ -24,7 +24,7 @@ class _Window:
     def setGeometry(self, *_geometry) -> None:
         pass
 
-    def set_blocks(self, blocks) -> None:
+    def set_blocks(self, blocks, animate_new_only: bool = False) -> None:
         self.blocks = blocks
 
     def set_edit_mode(self, _enabled: bool) -> None:

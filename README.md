@@ -126,6 +126,22 @@ Tagged releases are produced by `.github/workflows/release-windows.yml`. The rep
 
 The pipeline signs the main exe, installer, uninstaller, and PaddleOCR worker, calls a timestamp service, verifies Authenticode, re-checks size, and emits a matching `.sha256`. **Without signing credentials**, the pipeline skips signing and publishes an unsigned lightweight installer (the PaddleOCR component is skipped, since its manifest must be signed); **with** `WINDOWS_CERTIFICATE_PFX_BASE64` / `WINDOWS_CERTIFICATE_PASSWORD` configured, it signs everything and also ships the PaddleOCR component.
 
+#### Downloading unsigned builds (SmartScreen & integrity check)
+
+This repository currently has **no code-signing certificate configured**, so the `ScreenTranslator-Lite-*-Setup.exe`, the portable `ScreenTranslator-Lite.exe`, and the uninstaller shipped in Releases are all **unsigned**.
+
+- **SmartScreen / "Windows protected your PC".** When you open the installer or exe, Windows may show a SmartScreen warning. Click **More info → Run anyway** to continue; or, after downloading, right-click the file → **Properties → Unblock** before running. This is expected for unsigned programs and does **not** mean the file is malicious.
+- **Verify integrity (recommended).** Each installer ships with a sibling `*.sha256` file. After downloading, verify the hash with PowerShell to make sure the transfer was not tampered with:
+
+```powershell
+# In your Downloads folder, compute the installer hash
+Get-FileHash -Algorithm SHA256 .\ScreenTranslator-Lite-0.3.0-beta-Setup.exe | ForEach-Object { $_.Hash.ToLower() }
+# Compare it against the value inside the matching .sha256 file (they must match exactly)
+Get-Content .\ScreenTranslator-Lite-0.3.0-beta-Setup.exe.sha256
+```
+
+- If you would rather not run an unsigned build, build from source (see *Build a lightweight installer* above), or configure `WINDOWS_CERTIFICATE_PFX_BASE64` / `WINDOWS_CERTIFICATE_PASSWORD` so the pipeline emits signed artifacts.
+
 ## FAQ
 
 **Recognition returns nothing.** Install the Windows OCR language pack for the target language; lower *OCR → Minimum confidence*; for hard fonts download and switch to PaddleOCR; confirm the region actually contains text.

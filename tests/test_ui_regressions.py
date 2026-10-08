@@ -112,6 +112,9 @@ class _Controller:
     def refresh(self) -> None:
         pass
 
+    def toggle_monitor(self) -> None:
+        pass
+
     def apply_runtime_selection(self, **_values) -> None:
         pass
 

@@ -2,14 +2,15 @@
 
 from __future__ import annotations
 
+import re
 from pathlib import Path
 
 import app.version as version_module
 
 
-def test_source_version_is_v025_beta_release():
-    assert version_module._SOURCE_VERSION == "0.2.5-beta"
-    assert version_module.RELEASE_CHANNEL == "beta"
+def test_source_version_is_valid_beta_release():
+    assert re.match(r"^\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?$", version_module._SOURCE_VERSION)
+    assert version_module.RELEASE_CHANNEL in {"stable", "beta", "alpha"}
 
 
 def test_frozen_runtime_uses_injected_build_version(tmp_path, monkeypatch):

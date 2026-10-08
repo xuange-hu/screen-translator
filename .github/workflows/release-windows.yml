@@ -74,12 +74,9 @@ jobs:
           choco install innosetup --no-progress --yes
 
       - name: Test lightweight source tree
-        # These tests have never run in CI before (no test workflow exists) and
-        # several depend on a real display/OCR engine/network that headless
-        # GitHub runners lack. Keep them running for visibility, but do not let
-        # an environment-bound failure block the release build. Fix the specific
-        # tests separately once the failure is known.
-        continue-on-error: true
+        # Real release gate: these tests run headless (QT_QPA_PLATFORM=offscreen)
+        # on the lightweight source tree. A failure here blocks the build so that
+        # regressions in the source tree are caught before a release is published.
         shell: pwsh
         env:
           QT_QPA_PLATFORM: offscreen

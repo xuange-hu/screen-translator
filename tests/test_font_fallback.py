@@ -62,6 +62,9 @@ def _fit(window, text: str, width: int, height: int):
 
 def test_fit_font_matches_large_source_height(app):
     window = _build_window(app, "")
+    # 用较小的基准字号，验证“大源行高应自然放大到超过用户设定基准”的语义；
+    # 否则按默认大字号（源码上限 max(pref_size, 36)）只会落在基准以内。
+    window._config.set("overlay.font_size", 18)
     font = _fit(window, "你好世界", 300, 60)
     assert font.pointSize() > int(window._config.get("overlay.font_size", 18))
     assert QFontMetrics(font).height() <= 61

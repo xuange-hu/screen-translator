@@ -79,7 +79,7 @@ class TranslationOverlayWindow(QWidget):
         self._previous_blocks: list[Block] = []
         self._block_animating: list[bool] = []
         self._anim_progress = 1.0
-        self._highlight_color = QColor(str(self.config.get("capture.select_border_color") or "#2F7BFF"))
+        self._highlight_color = QColor(str(self._config.get("capture.select_border_color") or "#2F7BFF"))
         self._highlight_animation = QVariantAnimation(self)
         self._highlight_animation.setEasingCurve(ENTER_EASING)
         self._highlight_animation.valueChanged.connect(self._set_anim_progress)
@@ -357,7 +357,7 @@ class TranslationOverlayWindow(QWidget):
 
     def apply_style(self) -> None:
         self._font_cache = {}
-        self._highlight_color = QColor(str(self.config.get("capture.select_border_color") or "#2F7BFF"))
+        self._highlight_color = QColor(str(self._config.get("capture.select_border_color") or "#2F7BFF"))
         self.update()
 
     def set_edit_mode(self, enabled: bool) -> None:
