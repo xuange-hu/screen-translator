@@ -153,6 +153,39 @@ QColorDialog, QFileDialog { background: #F7F5F1; }
 QMessageBox { background: #F7F5F1; }
 """
 
+WELCOME_QSS = """
+QWidget#WelcomeHeader { background: #FFFEFC; border-bottom: 1px solid #E4E1DA; }
+QLabel#WelcomeTitle { color: #252826; font-size: 22px; font-weight: 700; }
+QLabel#WelcomeSubtitle { color: #76756F; font-size: 13px; }
+QWidget#WelcomeFooter { background: #FFFEFC; border-top: 1px solid #E4E1DA; }
+QLabel#WelcomeBody { color: #4F514D; font-size: 14px; }
+QLabel#WelcomeRowTitle { color: #2B2F2C; font-size: 15px; font-weight: 600; }
+QLabel#WelcomeRowDesc { color: #7A7973; font-size: 12px; }
+QLabel#WelcomeBadge {
+    background: #EDF5FF; color: #216FD6; border-radius: 12px; font-size: 18px; font-weight: 700;
+}
+QLabel#HotkeyChip {
+    background: #2878E8; color: #FFFFFF; border-radius: 7px;
+    padding: 3px 9px; font-size: 12px; font-weight: 600;
+}
+QFrame#WelcomeDot { background: #DCDAD3; border-radius: 4px; }
+QFrame#WelcomeDot[active="true"] { background: #2878E8; }
+QWidget#AboutMark {
+    background: #2878E8; color: #FFFFFF; border-radius: 14px; font-size: 24px; font-weight: 700;
+}
+QLabel#AboutName { color: #252826; font-size: 22px; font-weight: 700; }
+QLabel#AboutVersion { color: #76756F; font-size: 13px; }
+QLabel#AboutTagline { color: #4F514D; font-size: 13px; }
+QLabel#AboutRepo { color: #4F514D; font-size: 13px; }
+QLabel#ShortcutName { color: #2B2F2C; font-size: 14px; }
+QFrame#ExampleCard {
+    background: #FFFEFC; border: 1px solid #E4E1DA; border-radius: 14px;
+}
+QLabel#ExampleSource { color: #76756F; font-size: 13px; }
+QLabel#ExampleTarget { color: #252826; font-size: 18px; font-weight: 600; }
+QLabel#ExampleHint { color: #76756F; font-size: 12px; }
+"""
+
 
 def _replace_tokens(source: str, tokens: AppearanceTokens) -> str:
     replacements = {
@@ -212,7 +245,7 @@ def _replace_tokens(source: str, tokens: AppearanceTokens) -> str:
 
 
 def build_stylesheet(tokens: AppearanceTokens) -> str:
-    sheet = _replace_tokens(MAIN_WINDOW_QSS + DIALOG_QSS, tokens)
+    sheet = _replace_tokens(MAIN_WINDOW_QSS + DIALOG_QSS + WELCOME_QSS, tokens)
     vertical_padding = {"spacious": 10, "balanced": 8, "compact": 6}[tokens.density]
     input_height = max(24, tokens.control_height - 14)
     sheet += f"""

@@ -5,7 +5,7 @@ from __future__ import annotations
 from collections.abc import Callable
 
 from PySide6.QtCore import QAbstractAnimation, QPropertyAnimation, QTimer, Qt, QVariantAnimation
-from PySide6.QtGui import QColor, QFont, QPainter, QPen
+from PySide6.QtGui import QColor, QFont, QKeySequence, QPainter, QPen, QShortcut
 from PySide6.QtWidgets import (
     QApplication,
     QCheckBox,
@@ -455,6 +455,28 @@ class MainWindow(QWidget):
         option_grid.setColumnStretch(3, 1.55)
         layout.addWidget(options_panel)
 
+        example_card = QFrame()
+        example_card.setObjectName("ExampleCard")
+        ev = QVBoxLayout(example_card)
+        ev.setContentsMargins(22, 16, 22, 16)
+        ev.setSpacing(10)
+        ev_head = QHBoxLayout()
+        ev_title = QLabel("译文长这样")
+        ev_title.setObjectName("SectionLabel")
+        ev_hint = QLabel("译文会直接覆盖在屏幕原文的位置")
+        ev_hint.setObjectName("ExampleHint")
+        ev_head.addWidget(ev_title)
+        ev_head.addStretch(1)
+        ev_head.addWidget(ev_hint)
+        ev.addLayout(ev_head)
+        es = QLabel("Hello, world! This is a screenshot translation demo.")
+        es.setObjectName("ExampleSource")
+        et = QLabel("你好，世界！这是一段截图翻译的示例。")
+        et.setObjectName("ExampleTarget")
+        ev.addWidget(es)
+        ev.addWidget(et)
+        layout.addWidget(example_card)
+
         footer_panel = QFrame()
         footer_panel.setObjectName("FooterPanel")
         bottom_row = QHBoxLayout(footer_panel)
@@ -499,6 +521,8 @@ class MainWindow(QWidget):
         self.combo_target.currentIndexChanged.connect(self._on_combo_changed)
         self.combo_ocr.currentIndexChanged.connect(self._on_combo_changed)
         self.combo_service.currentIndexChanged.connect(self._on_combo_changed)
+        if hasattr(self.controller, "show_about"):
+            QShortcut(QKeySequence("F1"), self).activated.connect(self.controller.show_about)
 
     def _load_values(self) -> None:
         self._block_signals = True

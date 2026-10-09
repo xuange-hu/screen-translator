@@ -208,6 +208,9 @@ class Application(
             self._apply_hotkeys()
             self._apply_autostart()
             self._warmup()
+            if (not self.config.get("general.first_run_done", False)
+                    and os.environ.get("SCREEN_TRANSLATOR_SELFTEST") != "1"):
+                QTimer.singleShot(500, self._show_welcome)
             if self.config.get("updates.auto_check", True):
                 QTimer.singleShot(6000, self._check_for_updates)
         except Exception as exc:
@@ -376,6 +379,25 @@ class Application(
             self.refresh()
         elif action == "monitor_toggle":
             self.toggle_monitor()
+
+    # ------------------------------------------------------------------ onboarding / help
+    def _show_welcome(self) -> None:
+        """首次启动时弹出的三步引导；用户点“开始使用”后写入完成标志。"""
+        if self.window is None:
+            return
+        from ui.welcome_dialog import WelcomeDialog
+
+        def finish() -> None:
+            self.config.set("general.first_run_done", True)
+            self.config.save()
+
+        WelcomeDialog(self.window, self.config.hotkeys(), on_finish=finish).exec()
+
+    def show_about(self) -> None:
+        """打开“关于”对话框（含版本、仓库与快捷键速查）。"""
+        from ui.about_dialog import AboutDialog
+
+        AboutDialog(self.window, self.config).exec()
 
     # ------------------------------------------------------------------ update
     def _check_for_updates(self) -> None:

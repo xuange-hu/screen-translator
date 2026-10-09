@@ -65,6 +65,7 @@ _HOTKEY_ACTIONS = [
     ("capture_window", "当前窗口翻译"),
     ("toggle_overlay", "隐藏/显示译文"),
     ("refresh", "重新识别翻译"),
+    ("monitor_toggle", "实时监控"),
 ]
 
 
@@ -842,6 +843,11 @@ class SettingsDialog(QWidget):
         self.spin_x_gap.setSingleStep(0.1)
         self.chk_gpu = QCheckBox("使用 GPU（需要带 GPU 的 PaddlePaddle）")
         self.chk_orientation = QCheckBox("启用文字方向识别")
+        self.spin_confidence.setToolTip("低于该置信度的识别结果会被丢弃；0.6 左右较稳妥，越低越宽容但可能混入噪点。")
+        self.spin_y_tol.setToolTip("同一行文字在垂直方向的容差；数值越大，间距较远的文字块也越容易合并到同一行。")
+        self.spin_x_gap.setToolTip("同一行内相邻文字块的横向最大间隔；超过该间隔则视为不同行。")
+        self.chk_gpu.setToolTip("用 GPU 加速 PaddleOCR 识别，需要带 GPU 的 PaddlePaddle；无 GPU 时请勿勾选。")
+        self.chk_orientation.setToolTip("识别竖排或旋转文字方向，启用后首字识别略慢但更准确。")
 
         engine_form = self._new_form()
         engine_form.addRow("OCR 引擎", self.combo_engine)
@@ -959,6 +965,10 @@ class SettingsDialog(QWidget):
         self.combo_service = QComboBox()
         for service in list_translators():
             self.combo_service.addItem(service_display_name(service), service)
+        self.combo_service.setToolTip(
+            "选择翻译服务商；默认 mymemory 为免费词典翻译，开箱即用，"
+            "填入对应 Key 可获得更准的在线翻译。"
+        )
         self.combo_source = QComboBox()
         self.combo_target = QComboBox()
         for code, name in LANGUAGES:
@@ -1012,6 +1022,17 @@ class SettingsDialog(QWidget):
         key_form.addRow("有道 App Secret", self.edit_youdao_secret)
         key_form.addRow("Azure 翻译 Key", self.edit_azure_key)
         key_form.addRow("Azure 区域(Region)", self.edit_azure_region)
+        self.edit_openai_key.setToolTip("OpenAI 兼容服务的 API Key（如 gpt-4o-mini 翻译）。")
+        self.edit_openai_model.setToolTip("模型名，例如 gpt-4o-mini；留空使用程序默认值。")
+        self.edit_openai_url.setToolTip("自定义 Base URL，用于代理或第三方兼容端点；留空使用官方地址。")
+        self.edit_deepl_key.setToolTip("DeepL 的 API Key（Pro 或 Free 均可）。")
+        self.edit_google_key.setToolTip("Google Cloud Translation 的 API Key。")
+        self.edit_baidu_appid.setToolTip("百度翻译开放平台的 APP ID。")
+        self.edit_baidu_key.setToolTip("百度翻译开放平台的密钥（Secret）。")
+        self.edit_youdao_key.setToolTip("有道智云的 App Key。")
+        self.edit_youdao_secret.setToolTip("有道智云的 App Secret。")
+        self.edit_azure_key.setToolTip("Azure AI 翻译服务的密钥。")
+        self.edit_azure_region.setToolTip("Azure 翻译资源所属区域，例如 eastasia。")
         layout.addWidget(
             self._card(
                 "在线服务凭据",

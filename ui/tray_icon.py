@@ -9,6 +9,13 @@ from PySide6.QtWidgets import QMenu, QSystemTrayIcon
 from ui.appearance import AppearanceTokens, current_tokens
 
 
+def _hkfmt(raw: str) -> str:
+    """把 ``ctrl+shift+a`` 美化为 ``Ctrl+Shift+A`` 用于菜单展示。"""
+    if not raw:
+        return ""
+    return "+".join(part.capitalize() for part in raw.split("+"))
+
+
 def build_icon(tokens: AppearanceTokens | None = None) -> QIcon:
     tokens = tokens or current_tokens()
     pixmap = QPixmap(64, 64)
@@ -69,8 +76,10 @@ class TrayIcon(QSystemTrayIcon):
         menu.addAction(self.act_copy_tr)
         menu.addSeparator()
         self.act_settings = QAction("打开设置", menu)
+        self.act_about = QAction("关于", menu)
         self.act_quit = QAction("退出", menu)
         menu.addAction(self.act_settings)
+        menu.addAction(self.act_about)
         menu.addAction(self.act_quit)
         self.setContextMenu(menu)
 
@@ -84,8 +93,24 @@ class TrayIcon(QSystemTrayIcon):
         self.act_copy_src.triggered.connect(self.controller.copy_original)
         self.act_copy_tr.triggered.connect(self.controller.copy_translation)
         self.act_settings.triggered.connect(self.controller.open_settings)
+        self.act_about.triggered.connect(
+            getattr(self.controller, "show_about", lambda: None)
+        )
         self.act_quit.triggered.connect(self.controller.shutdown)
         self.activated.connect(self._on_activated)
+
+        hk: dict = {}
+        try:
+            hk = self.controller.config.hotkeys()
+        except Exception:
+            hk = {}
+        self._hk = hk
+        self.act_region.setText(f"框选翻译\t{_hkfmt(hk.get('capture_region', ''))}")
+        self.act_fullscreen.setText(f"全屏翻译\t{_hkfmt(hk.get('capture_fullscreen', ''))}")
+        self.act_window.setText(f"当前窗口翻译\t{_hkfmt(hk.get('capture_window', ''))}")
+        self.act_refresh.setText(f"刷新翻译\t{_hkfmt(hk.get('refresh', ''))}")
+        self.act_toggle.setText(f"隐藏译文\t{_hkfmt(hk.get('toggle_overlay', ''))}")
+        self.act_monitor.setText(f"实时监控\t{_hkfmt(hk.get('monitor_toggle', ''))}")
 
     def refresh_appearance(self) -> None:
         self.setIcon(build_icon())
@@ -107,11 +132,15 @@ class TrayIcon(QSystemTrayIcon):
 
     def set_overlay_checked(self, visible: bool) -> None:
         self.act_toggle.setChecked(visible)
-        self.act_toggle.setText("隐藏译文" if visible else "显示译文")
+        self.act_toggle.setText(
+            f"{'隐藏译文' if visible else '显示译文'}\t{_hkfmt(self._hk.get('toggle_overlay', ''))}"
+        )
 
     def set_monitor_checked(self, active: bool) -> None:
         self.act_monitor.setChecked(active)
-        self.act_monitor.setText("停止监控" if active else "实时监控")
+        self.act_monitor.setText(
+            f"{'停止监控' if active else '实时监控'}\t{_hkfmt(self._hk.get('monitor_toggle', ''))}"
+        )
 
     def set_edit_mode_checked(self, enabled: bool) -> None:
         self.act_edit.setChecked(enabled)
