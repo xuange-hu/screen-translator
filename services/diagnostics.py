@@ -22,7 +22,6 @@ from typing import Any
 from app.config import AppConfig
 from app.logger import log_dir, redact
 
-
 _ARCHIVE_CONFIG = "config.json"
 _ARCHIVE_SYSTEM = "system.json"
 _LOG_NAME_RE = re.compile(r"^app\.log(?:\.[1-3])?$")

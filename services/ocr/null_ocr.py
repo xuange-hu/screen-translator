@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from app.logger import get_logger
-from services.ocr.base import OCRLine, OCREngine, register_engine
+from services.ocr.base import OCREngine, OCRLine, register_engine
 
 log = get_logger("ocr.null")
 

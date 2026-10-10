@@ -10,8 +10,11 @@ from __future__ import annotations
 
 import ctypes
 import itertools
+import logging
 from dataclasses import dataclass
 from typing import Sequence
+
+_log = logging.getLogger(__name__)
 
 
 class _RECT(ctypes.Structure):
@@ -40,8 +43,8 @@ def enum_display_monitors_physical() -> list[tuple[int, int, int, int]]:
 
     try:
         ctypes.windll.user32.EnumDisplayMonitors(0, 0, _MONITOR_ENUM_PROC(_cb), 0)
-    except Exception:
-        pass
+    except Exception as exc:
+        _log.debug("EnumDisplayMonitors 失败，回退主屏：%s", exc)
     if not rects:
         # 兜底：主屏 1920x1080
         rects.append((0, 0, 1920, 1080))

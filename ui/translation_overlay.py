@@ -11,8 +11,8 @@ from PySide6.QtCore import (
     QPropertyAnimation,
     QRectF,
     Qt,
-    Signal,
     QVariantAnimation,
+    Signal,
 )
 from PySide6.QtGui import QColor, QFont, QFontMetrics, QKeySequence, QPainter, QPen, QShortcut
 from PySide6.QtWidgets import QWidget
@@ -20,12 +20,12 @@ from PySide6.QtWidgets import QWidget
 from app.logger import get_logger
 from ui.motion import (
     BASE,
-    FAST,
-    MICRO,
-    SLOW,
     ENTER_EASING,
     EXIT_EASING,
+    FAST,
+    MICRO,
     MOVE_EASING,
+    SLOW,
     motion_duration,
 )
 
@@ -403,7 +403,7 @@ class TranslationOverlayWindow(QWidget):
         self._drag_index = None
 
     def contextMenuEvent(self, event) -> None:
-        from PySide6.QtWidgets import QMenu, QApplication
+        from PySide6.QtWidgets import QApplication, QMenu
 
         original = "\n".join(str(getattr(b, "text", "") or "") for b in self._blocks)
         translated = "\n".join(str(getattr(b, "translated_text", "") or "") for b in self._blocks)

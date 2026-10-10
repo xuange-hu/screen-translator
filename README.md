@@ -3,6 +3,8 @@
 > Real-time, on-screen translation for anything you **can't copy**. Capture a region, recognize the text with Windows OCR or optional PaddleOCR, translate it, and overlay the result right where the original words were — live, with a draggable region and fade-in highlights for changes.
 
 [![Stars](https://img.shields.io/github/stars/xuange-hu/screen-translator?style=social)](https://github.com/xuange-hu/screen-translator/stargazers)
+[![CI](https://github.com/xuange-hu/screen-translator/actions/workflows/ci.yml/badge.svg)](https://github.com/xuange-hu/screen-translator/actions/workflows/ci.yml)
+[![Lint](https://github.com/xuange-hu/screen-translator/actions/workflows/ci.yml/badge.svg?event=push&name=lint)](https://github.com/xuange-hu/screen-translator/actions/workflows/ci.yml)
 [![License](https://img.shields.io/badge/license-MIT-green)](LICENSE)
 [![Platform](https://img.shields.io/badge/platform-Windows-blue)](https://www.microsoft.com/windows)
 [![Python](https://img.shields.io/badge/python-3.11%2B-3776AB)](https://www.python.org)

@@ -17,45 +17,44 @@ from PySide6.QtCore import QObject, QPoint, QRect, Qt, QTimer
 from PySide6.QtGui import QGuiApplication
 from PySide6.QtWidgets import QMessageBox, QWidget
 
-from app.capture_session import _CaptureSession
-from app.config import AppConfig
-from app.hotkeys import HotkeyError, HotkeyManager
-from app.logger import app_data_dir, get_logger
-from app.models import CaptureInfo, TextRegion
-from app.runtime import sys_executable, main_script
-from app.version import __version__
-
-# 各职责拆分为 Mixin，Application 只保留生命周期/更新并继承它们。
-from app.capture_mixin import CaptureMixin
-from app.clipboard_mixin import ClipboardMixin
-from app.history_mixin import HistoryMixin
-from app.monitor_mixin import MonitorMixin
-from app.pipeline_mixin import PipelineMixin
-from app.settings_mixin import SettingsMixin
-from app.status_mixin import StatusMixin
+import services.ocr.null_ocr  # noqa: F401
 
 # 确保各 OCR 引擎 / 翻译适配器已注册（顺序影响 UI 下拉框默认项）
 import services.ocr.paddle_ocr  # noqa: F401
 import services.ocr.windows_ocr  # noqa: F401
-import services.ocr.null_ocr  # noqa: F401
+import services.translation.deepl_translator  # noqa: F401
+import services.translation.google_free_translator  # noqa: F401
+import services.translation.google_translator  # noqa: F401
 import services.translation.mock_translator  # noqa: F401
 import services.translation.mymemory_translator  # noqa: F401
-import services.translation.google_free_translator  # noqa: F401
 import services.translation.openai_translator  # noqa: F401
-import services.translation.deepl_translator  # noqa: F401
-import services.translation.google_translator  # noqa: F401
 
-from services.ocr.base import OCRUnavailableError, create_ocr_engine, list_ocr_engines
+# 各职责拆分为 Mixin，Application 只保留生命周期/更新并继承它们。
+from app.capture_mixin import CaptureMixin
+from app.capture_session import _CaptureSession
+from app.clipboard_mixin import ClipboardMixin
+from app.config import AppConfig
+from app.history_mixin import HistoryMixin
+from app.hotkeys import HotkeyError, HotkeyManager
+from app.logger import app_data_dir, get_logger
+from app.models import CaptureInfo, TextRegion
+from app.monitor_mixin import MonitorMixin
+from app.pipeline_mixin import PipelineMixin
+from app.runtime import main_script, sys_executable
+from app.settings_mixin import SettingsMixin
+from app.status_mixin import StatusMixin
+from app.version import __version__
 from services.authenticode import (
     AuthenticodeVerificationError,
     runtime_signature_reference,
     verify_authenticode,
 )
+from services.ocr.base import OCRUnavailableError, create_ocr_engine, list_ocr_engines
 from services.screenshot_service import ScreenshotService
-from services.update_service import sha256_file
 from services.translation.base import Translator
 from services.translation.cache import TranslationCache
 from services.translation.factory import create_translator, list_translators
+from services.update_service import sha256_file
 from services.window_capture_service import (
     WindowCaptureError,
     get_foreground_window,
@@ -66,19 +65,19 @@ from services.window_capture_service import (
     window_capture_available,
 )
 from ui.appearance import resolve_tokens
-from ui.main_window import MainWindow
 from ui.floating_status import FloatingStatus
+from ui.main_window import MainWindow
 from ui.motion import CAPTURE_SETTLE, SELECTION_SETTLE, STATUS_HOLD
+from ui.ocr_component_tasks import PaddleComponentInstallTask
 from ui.overlay_manager import OverlayManager
 from ui.selection_overlay import SelectionOverlay
 from ui.settings_dialog import SettingsDialog
 from ui.style import apply_style
 from ui.tray_icon import TrayIcon, build_icon
-from ui.ocr_component_tasks import PaddleComponentInstallTask
 from ui.update_tasks import UpdateCheckTask, UpdateDownloadTask
 from ui.window_capture_highlight import WindowCaptureHighlight
 from utils import dpi_utils
-from utils.language_utils import LANGUAGES, LANGUAGE_CODES
+from utils.language_utils import LANGUAGE_CODES, LANGUAGES
 from workers.translation_worker import PipelineTask
 
 log = get_logger("application")

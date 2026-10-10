@@ -4,6 +4,8 @@ from __future__ import annotations
 
 from PySide6.QtCore import QPoint, QRect, Qt
 
+# 通过 app.application 命名空间解析 is_window_capturable，使测试对该符号的 monkeypatch 仍然生效。
+from app import application as _application
 from app.capture_session import _CaptureSession
 from app.logger import get_logger
 from app.models import CaptureInfo
@@ -16,9 +18,6 @@ from ui.motion import CAPTURE_SETTLE, SELECTION_SETTLE
 from ui.selection_overlay import SelectionOverlay
 from ui.window_capture_highlight import WindowCaptureHighlight
 from utils import dpi_utils
-
-# 通过 app.application 命名空间解析 is_window_capturable，使测试对该符号的 monkeypatch 仍然生效。
-from app import application as _application
 
 log = get_logger("application")
 

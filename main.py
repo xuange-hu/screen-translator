@@ -35,9 +35,8 @@ def _setup_runtime() -> None:
 def main() -> int:
     _setup_runtime()
 
-    from PySide6.QtWidgets import QApplication
     from PySide6.QtCore import QSharedMemory
-    from PySide6.QtWidgets import QMessageBox
+    from PySide6.QtWidgets import QApplication, QMessageBox
 
     from app.application import Application
     from app.logger import get_logger, setup_logging

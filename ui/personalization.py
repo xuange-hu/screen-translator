@@ -5,7 +5,7 @@ from __future__ import annotations
 from dataclasses import replace
 from typing import Any
 
-from PySide6.QtCore import QLineF, QPointF, QRectF, QSize, Qt, Signal, QVariantAnimation
+from PySide6.QtCore import QLineF, QPointF, QRectF, QSize, Qt, QVariantAnimation, Signal
 from PySide6.QtGui import QColor, QFont, QPainter, QPainterPath, QPen
 from PySide6.QtWidgets import QHBoxLayout, QRadioButton, QSizePolicy, QWidget
 

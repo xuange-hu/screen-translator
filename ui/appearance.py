@@ -14,7 +14,6 @@ from typing import Any
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QColor, QGuiApplication
 
-
 PALETTE_PRESETS = (
     ("warm_paper", "暖纸", "温和、自然的纸张底色"),
     ("mist", "雾蓝", "更清透的冷静灰蓝"),

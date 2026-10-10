@@ -6,27 +6,26 @@ separate, signed-release component after checking its manifest and archive.
 
 from __future__ import annotations
 
-from dataclasses import dataclass
 import hashlib
 import json
 import os
-from pathlib import Path, PurePosixPath
 import shutil
 import stat
 import subprocess
 import tempfile
+import zipfile
+from dataclasses import dataclass
+from pathlib import Path, PurePosixPath
 from typing import Any, Callable, Mapping
 from urllib.error import HTTPError, URLError
 from urllib.parse import urlparse, urlsplit, urlunsplit
 from urllib.request import Request, urlopen
-import zipfile
 
 from services.authenticode import (
     runtime_signature_reference,
     verify_authenticode,
     verify_detached_cms,
 )
-
 
 DEFAULT_MANIFEST_URL = (
     "https://github.com/nimbus-translate/screen-translator/releases/latest/download/"

@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 
-from PySide6.QtCore import QAbstractAnimation, QPropertyAnimation, QTimer, Qt, QVariantAnimation
+from PySide6.QtCore import QAbstractAnimation, QPropertyAnimation, Qt, QTimer, QVariantAnimation
 from PySide6.QtGui import QColor, QFont, QKeySequence, QPainter, QPen, QShortcut
 from PySide6.QtWidgets import (
     QApplication,
@@ -25,10 +25,10 @@ from services.translation.factory import service_display_name
 from ui.appearance import current_tokens
 from ui.motion import (
     BASE,
-    FAST,
-    MICRO,
     ENTER_EASING,
     EXIT_EASING,
+    FAST,
+    MICRO,
     MOVE_EASING,
     RELEASE_EASING,
     motion_duration,

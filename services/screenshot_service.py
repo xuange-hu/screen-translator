@@ -5,9 +5,12 @@ from __future__ import annotations
 import threading
 from typing import Any
 
+from app.logger import get_logger
 from app.models import CaptureInfo
 from utils import dpi_utils
 from utils.image_utils import mss_bgra_to_bgr
+
+_log = get_logger("screenshot")
 
 
 class ScreenshotService:
@@ -27,8 +30,8 @@ class ScreenshotService:
         if self._sct is not None:
             try:
                 self._sct.close()
-            except Exception:
-                pass
+            except Exception as exc:
+                _log.debug("释放 mss 截图资源失败（可忽略）：%s", exc)
             self._sct = None
 
     def monitors(self) -> list[dict]:

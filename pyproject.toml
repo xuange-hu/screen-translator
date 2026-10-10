@@ -1,0 +1,41 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[tool.ruff]
+line-length = 120
+target-version = "py311"
+# PySide6 GUI app: lint is rolled out incrementally. We enforce the
+# unambiguous, low-risk categories first and widen the net over time.
+extend-exclude = ["tests", ".venv", "build", "dist"]
+
+[tool.ruff.lint]
+select = [
+    "E9",   # syntax errors (hard failures)
+    "F",    # pyflakes: undefined names, unused imports, redefinitions
+    "W",    # warnings
+    "I",    # import sorting
+]
+ignore = [
+    "E402", # module level import not at top of file (common in Qt entrypoints)
+    "E501", # line too long (legacy GUI code; raise after autoformat)
+    "E741", # ambiguous variable name (legacy)
+    "F401", # unused import (large incremental cleanup, tracked separately)
+    "F841", # local variable assigned but never used
+    "F823", # local variable declared but never used (comprehension)
+]
+
+[tool.ruff.lint.per-file-ignores]
+# Test files may shadow names and use broad assertions on purpose.
+"tests/**" = ["F811", "F401"]
+# Mock i18n fixture intentionally mixes game-terminology and UI-terminology that
+# share an English surface form (e.g. "score"=得分 vs 分数, "block"=格挡 vs 屏蔽).
+# The later entry wins at runtime by design; key-collision lint is not applicable.
+"services/translation/mock_dictionary.py" = ["F601"]
+
+[tool.mypy]
+python_version = "3.11"
+ignore_missing_imports = true
+follow_imports = "silent"
+warn_unused_ignores = false
+# Run locally with: python -m mypy app services utils workers --exclude '(test_|_test)'

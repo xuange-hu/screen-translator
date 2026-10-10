@@ -8,7 +8,6 @@ from enum import Enum
 from PySide6.QtCore import QEasingCurve, Qt
 from PySide6.QtWidgets import QApplication
 
-
 MICRO = 80
 FAST = 120
 BASE = 180

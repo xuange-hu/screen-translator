@@ -18,9 +18,8 @@ from typing import Any
 import numpy as np
 from PIL import Image
 
-from services.ocr.base import OCRLine, OCREngine, register_engine
+from services.ocr.base import OCREngine, OCRLine, register_engine
 from utils.language_utils import to_windows_lang
-
 
 _WINOCR_INSTALL_HINT = "请安装可选依赖：pip install winocr"
 

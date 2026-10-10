@@ -2,15 +2,15 @@
 
 from __future__ import annotations
 
-import threading
 import tempfile
+import threading
 from pathlib import Path
 from typing import Any
 
 import numpy as np
 
 from app.logger import app_data_dir, get_logger
-from services.ocr.base import OCRLine, OCREngine, register_engine
+from services.ocr.base import OCREngine, OCRLine, register_engine
 from services.ocr.component_manager import DEFAULT_MANIFEST_URL, PaddleComponentManager
 from utils.language_utils import to_paddle_lang
 
@@ -101,8 +101,8 @@ class PaddleOCREngine(OCREngine):
     @staticmethod
     def _local_available() -> bool:
         try:
-            import paddleocr  # noqa: F401
             import paddle  # noqa: F401
+            import paddleocr  # noqa: F401
 
             return True
         except Exception:

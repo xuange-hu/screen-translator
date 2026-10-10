@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import Callable
 
-from services.translation.base import Translator, _REGISTRY, list_translators
+from services.translation.base import _REGISTRY, Translator, list_translators
 
 _SERVICE_DISPLAY = {
     "mock": "Mock（本地词典演示）",

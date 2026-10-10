@@ -6,9 +6,11 @@ import os
 
 from PySide6.QtCore import Qt, QTimer
 
+# 通过 app.application 命名空间解析 create_ocr_engine，使测试对该符号的 monkeypatch 仍然生效。
+from app import application as _application
 from app.hotkeys import HotkeyError, HotkeyManager
 from app.logger import get_logger
-from app.runtime import sys_executable, main_script
+from app.runtime import main_script, sys_executable
 from services.ocr.base import OCRUnavailableError
 from services.translation.base import Translator
 from services.translation.factory import create_translator
@@ -16,9 +18,6 @@ from ui.appearance import resolve_tokens
 from ui.settings_dialog import SettingsDialog
 from ui.style import apply_style
 from ui.tray_icon import build_icon
-
-# 通过 app.application 命名空间解析 create_ocr_engine，使测试对该符号的 monkeypatch 仍然生效。
-from app import application as _application
 
 log = get_logger("application")
 

@@ -8,7 +8,6 @@ from typing import Any
 from ui.appearance import AppearanceTokens, set_current_appearance
 from ui.motion import configure_motion
 
-
 MAIN_WINDOW_QSS = """
 QWidget#Root, QWidget#HomePage { background: #F7F5F1; }
 QLabel#TitleLabel { color: #252826; font-size: 24px; font-weight: 700; }

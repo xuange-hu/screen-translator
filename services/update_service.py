@@ -7,18 +7,16 @@ external updater.
 
 from __future__ import annotations
 
-from dataclasses import dataclass
 import hashlib
 import json
 import os
-from pathlib import Path
-from pathlib import PureWindowsPath
 import re
 import tempfile
+from dataclasses import dataclass
+from pathlib import Path, PureWindowsPath
 from typing import Any, Callable, Mapping, Sequence
 from urllib.error import HTTPError, URLError
 from urllib.request import Request, urlopen
-
 
 GITHUB_RELEASE_URL = "https://api.github.com/repos/{repository}/releases/latest"
 GITHUB_RELEASES_URL = "https://api.github.com/repos/{repository}/releases?per_page=100"

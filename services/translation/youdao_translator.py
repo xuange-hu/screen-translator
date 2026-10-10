@@ -3,11 +3,11 @@
 from __future__ import annotations
 
 import hashlib
+import html
 import os
 import time
 import uuid
 
-import html
 import requests
 
 from services.translation.base import TranslationError, Translator, register_translator

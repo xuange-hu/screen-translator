@@ -2,10 +2,12 @@
 
 from __future__ import annotations
 
-from pathlib import Path
+import logging
 import re
 import sys
+from pathlib import Path
 
+_log = logging.getLogger(__name__)
 
 _SOURCE_VERSION = "0.3.0-beta"
 
@@ -17,7 +19,8 @@ def _runtime_version() -> str:
         value = (Path(sys._MEIPASS) / "build-version.txt").read_text(
             encoding="ascii"
         ).strip()
-    except (AttributeError, OSError):
+    except (AttributeError, OSError) as exc:
+        _log.debug("读取冻结版本文件失败，回退源码版本：%s", exc)
         return _SOURCE_VERSION
     if re.fullmatch(r"\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?", value):
         return value

@@ -2,11 +2,11 @@
 
 from __future__ import annotations
 
-from PySide6.QtCore import QRect, Qt, Signal, QVariantAnimation
+from PySide6.QtCore import QRect, Qt, QVariantAnimation, Signal
 from PySide6.QtGui import QColor, QFont, QPainter, QPen
 from PySide6.QtWidgets import QWidget
 
-from ui.motion import SLOW, ENTER_EASING, motion_duration
+from ui.motion import ENTER_EASING, SLOW, motion_duration
 
 
 class WindowCaptureHighlight(QWidget):

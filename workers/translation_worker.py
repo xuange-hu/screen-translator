@@ -16,8 +16,8 @@ from utils.image_utils import (
     resize_for_ocr,
     sanitize_background,
 )
-from utils.layout_utils import merge_wrapped_labels, ocr_lines_to_regions
 from utils.language_utils import needs_translation
+from utils.layout_utils import merge_wrapped_labels, ocr_lines_to_regions
 from utils.text_utils import clean_text, normalize_ocr_text, protect_texts, restore_texts
 
 log = get_logger("worker")

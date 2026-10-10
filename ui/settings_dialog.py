@@ -7,30 +7,30 @@ import sys
 import time
 from pathlib import Path
 
-from PySide6.QtCore import QEvent, QPropertyAnimation, QRect, QTimer, Qt, Signal
+from PySide6.QtCore import QEvent, QPropertyAnimation, QRect, Qt, QTimer, Signal
 from PySide6.QtGui import QColor, QFont, QFontDatabase, QKeySequence, QPainter, QPen, QPixmap
 from PySide6.QtWidgets import (
+    QApplication,
+    QCheckBox,
     QColorDialog,
     QComboBox,
     QDoubleSpinBox,
     QFileDialog,
     QFormLayout,
+    QFrame,
     QHBoxLayout,
-    QLayout,
     QKeySequenceEdit,
     QLabel,
+    QLayout,
     QLineEdit,
     QMessageBox,
+    QProgressBar,
     QPushButton,
+    QScrollArea,
     QSlider,
     QSpinBox,
-    QScrollArea,
-    QProgressBar,
-    QFrame,
     QStackedWidget,
     QVBoxLayout,
-    QCheckBox,
-    QApplication,
     QWidget,
 )
 
@@ -51,7 +51,7 @@ from ui.appearance import (
     SURFACE_PRESETS,
     current_tokens,
 )
-from ui.motion import BASE, SLOW, ENTER_EASING, EXIT_EASING, MOVE_EASING, motion_duration
+from ui.motion import BASE, ENTER_EASING, EXIT_EASING, MOVE_EASING, SLOW, motion_duration
 from ui.ocr_component_tasks import PaddleComponentInstallTask
 from ui.personalization import AppearancePreview, PersonalizationChoiceRow
 from ui.update_tasks import UpdateCheckTask, UpdateDownloadTask

@@ -6,8 +6,8 @@ import math
 
 from PySide6.QtCore import (
     QAbstractAnimation,
-    QPoint,
     QParallelAnimationGroup,
+    QPoint,
     QPropertyAnimation,
     Qt,
     QTimer,

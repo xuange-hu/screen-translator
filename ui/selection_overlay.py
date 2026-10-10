@@ -2,20 +2,19 @@
 
 from __future__ import annotations
 
-from PySide6.QtCore import QPoint, QRect, Qt, Signal, QVariantAnimation
+from PySide6.QtCore import QPoint, QRect, Qt, QVariantAnimation, Signal
 from PySide6.QtGui import QColor, QFont, QKeySequence, QPainter, QPen, QShortcut
 from PySide6.QtWidgets import QWidget
 
 from ui.motion import (
     BASE,
-    FAST,
-    SCAN_CYCLE,
     ENTER_EASING,
     EXIT_EASING,
+    FAST,
+    SCAN_CYCLE,
     continuous_motion_enabled,
     motion_duration,
 )
-
 
 _ACCENT = "#2878E8"
 _SURFACE = "#FFFEFC"

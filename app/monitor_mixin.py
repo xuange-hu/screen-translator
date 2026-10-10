@@ -2,10 +2,9 @@
 
 from __future__ import annotations
 
-from app.logger import get_logger
-
 # 通过 app.application 命名空间解析 is_window_capturable，使测试对该符号的 monkeypatch 仍然生效。
 from app import application as _application
+from app.logger import get_logger
 
 log = get_logger("application")
 
