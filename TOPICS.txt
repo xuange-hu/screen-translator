@@ -1,0 +1,11 @@
+# 建议的 GitHub Topics（复制到仓库 Settings → Topics）
+screen-translator
+ocr
+translation
+windows
+pyside6
+real-time
+desktop-app
+python
+screenshot
+accessibility

@@ -2,11 +2,11 @@
 
 from __future__ import annotations
 
-import re
 from typing import Callable
 
 from PySide6.QtCore import QObject, Signal
 
+from app.hotkey_parser import detect_hotkey_conflicts, normalize_hotkey
 from app.logger import get_logger
 
 log = get_logger("hotkeys")
@@ -14,33 +14,6 @@ log = get_logger("hotkeys")
 
 class HotkeyError(Exception):
     pass
-
-
-def normalize_hotkey(sequence: str) -> str:
-    """把 'Ctrl+Shift+A' 统一成 pynput 语法：修饰键用 <ctrl> 形式。"""
-    sequence = sequence.strip().split(",")[0].strip()
-    parts_out = []
-    for raw in re.split(r"[\s+]+", sequence):
-        key = raw.strip().lower().strip("<>")
-        if not key:
-            continue
-        aliases = {
-            "ctrl": "ctrl",
-            "control": "ctrl",
-            "shift": "shift",
-            "alt": "alt",
-            "meta": "cmd",
-            "win": "cmd",
-            "cmd": "cmd",
-            "esc": "esc",
-            "space": "space",
-        }
-        key = aliases.get(key, key)
-        if len(key) == 1:
-            parts_out.append(key)
-        else:
-            parts_out.append(f"<{key}>")
-    return "+".join(parts_out)
 
 
 class HotkeyManager(QObject):
@@ -64,17 +37,7 @@ class HotkeyManager(QObject):
         self._registry = dict(hotkeys)
 
         # 冲突检测：同一组合绑定多个动作
-        seen: dict[str, str] = {}
-        conflicts: list[str] = []
-        for action, shortcut in self._registry.items():
-            combo = normalize_hotkey(shortcut)
-            if not combo:
-                continue
-            if combo in seen and seen[combo] != action:
-                conflicts.append(f"{combo}（{seen[combo]} 与 {action}）")
-            else:
-                seen[combo] = action
-
+        conflicts = detect_hotkey_conflicts(self._registry)
         if conflicts:
             raise HotkeyError("快捷键冲突：" + "；".join(conflicts))
 
