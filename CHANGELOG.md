@@ -10,6 +10,13 @@
 - 测试矩阵补充版本常量单测，与既有 40+ 个 GUI / 集成 / 回归测试并存，CI 在 PR 与 push 到 `main` 时一并运行。
 - 新增 `tests/test_runtime.py`：覆盖打包（frozen）与源码两种形态下 `main_script` /
   `sys_executable` 的取值分支——开机自启逻辑依赖该路径，且此模块不依赖 PySide6 可离线验证。
+- CI 新增 `pure` 作业：**不安装 PySide6**，在 ubuntu 上跑纯逻辑测试 + 对
+  `app/hotkey_parser.py` / `app/version.py` / `app/runtime.py` 做 mypy 类型检查，
+  为不依赖 Qt 的模块提供秒级回归信号（完整 GUI 套件仍跑在 windows-latest）。
+
+### Fixed
+- `app/version.py` 改用 `getattr(sys, "_MEIPASS", None)` 取值：既满足类型检查
+  （typeshed 无该属性），也移除了对 `AttributeError` 的隐式依赖，行为不变。
 
 ### Docs
 - `ARCHITECTURE.md`、`CONTRIBUTING.md`、`CODE_OF_CONDUCT.md` 持续完善；

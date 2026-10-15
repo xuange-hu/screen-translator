@@ -27,8 +27,8 @@ jobs:
         with:
           python-version: "3.11"
 
-      - name: Install pytest only
-        run: python -m pip install --upgrade pip pytest
+      - name: Install pytest + mypy
+        run: python -m pip install --upgrade pip pytest "mypy==1.*"
 
       - name: Run PySide6-free tests
         run: |
@@ -37,6 +37,16 @@ jobs:
             tests/test_version.py \
             tests/test_runtime.py \
             -q
+
+      - name: Type-check PySide6-free modules
+        # 增量式类型门禁：只对不依赖 Qt 的模块做强制检查，避免 GUI 代码的历史
+        # 注解债务阻塞合并。文件清单随纯逻辑抽离推进而扩大。
+        run: |
+          python -m mypy \
+            app/hotkey_parser.py \
+            app/version.py \
+            app/runtime.py \
+            --ignore-missing-imports
 
   test:
     runs-on: windows-latest
