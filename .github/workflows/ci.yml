@@ -12,6 +12,32 @@ permissions:
   contents: read
 
 jobs:
+  # 纯逻辑测试：不安装 PySide6，在 ubuntu 上几秒出结果。
+  # 之所以单独拆一个作业，是因为完整的 GUI/集成套件必须装 PySide6 且跑在
+  # windows-latest（见 test 作业），反馈慢得多；这里对「不依赖 Qt 的模块」
+  # 提供快速回归信号。新增纯逻辑用例时请一并加入本作业的文件清单。
+  pure:
+    name: Pure-logic tests (no PySide6)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install pytest only
+        run: python -m pip install --upgrade pip pytest
+
+      - name: Run PySide6-free tests
+        run: |
+          python -m pytest \
+            tests/test_hotkey_parser.py \
+            tests/test_version.py \
+            tests/test_runtime.py \
+            -q
+
   test:
     runs-on: windows-latest
     steps:
