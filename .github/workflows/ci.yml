@@ -36,6 +36,7 @@ jobs:
             tests/test_hotkey_parser.py \
             tests/test_version.py \
             tests/test_runtime.py \
+            tests/test_language_utils.py \
             -q
 
       - name: Type-check PySide6-free modules
