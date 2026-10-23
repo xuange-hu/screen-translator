@@ -25,3 +25,6 @@ Env/
 *.log
 .DS_Store
 Thumbs.db
+
+# 测试临时产物（沙箱安全删除 shim 不清理）
+tests/.smoke-*/
